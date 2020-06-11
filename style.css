@@ -1,0 +1,51 @@
+h4 {
+  margin-bottom: 2px;
+  margin-top: 10px;
+}
+
+.title {
+  font-weight: bold;
+}
+.success {
+  color: green;
+  width: 20px;
+  display: inline-block;
+  text-align: center;
+}
+
+.failure {
+  color: red;
+  width: 20px;
+  display: inline-block;
+  text-align: center;
+}
+
+.italic {
+  font-style: italic;
+}
+
+.units {
+  padding: 10px;
+  background-color: LightGoldenRodYellow;
+}
+.modifiers {
+  padding: 10px;
+  background-color: Khaki;
+}
+.probabilities {
+  padding: 10px;
+  background-color: DarkKhaki
+}
+.rolls {
+  padding: 10px;
+  background-color: GhostWhite
+}
+.legend {
+  margin-top: 10px;
+  padding: 10px;
+  background-color: LightGray;
+  font-size: small;
+}
+.legend span {
+  font-size: large;
+}

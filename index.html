@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Bolt Action Automator</title>
+    <link href="style.css" rel="stylesheet">
+  </head>
+  <body>
+    <div class="units">
+      <b>Select shooter</b>
+      <form></form>
+    </div>
+    
+    <div class="modifiers">
+      <b>Select modifiers</b>
+      <h4>Attackers</h4>
+      <form class="range">
+        <label>Range:</label>
+        <input type="radio" id="close" value="1" name="gender">
+        <label for="close">close</label>
+    
+        <input type="radio" id="short" value="0" name="gender" checked>
+        <label for="short">short</label>
+    
+        <input type="radio" id="long" value="-1" name="gender">
+        <label for="long">long</label>
+      </form>
+    
+      <h4>Target</h4>
+      <form class="cover">
+        <label>Cover:</label>
+        <input type="radio" id="none" name="cover" value="0" checked>
+        <label for="none">none</label>
+    
+        <input type="radio" id="soft" name="cover" value="-1">
+        <label for="soft">soft</label>
+    
+        <input type="radio" id="hard" name="cover" value="-2">
+        <label for="hard">hard</label>
+      </form>
+      
+      <form class="other">
+        <label>Other:</label>
+        
+        <input type="checkbox" id="down" name="other" value="-2">
+        <label for="down">down</label>
+      </form>
+      
+      <form class="damageValue">
+        <label>Target:</label>
+        <input type="radio" id="inex" name="gender" value="3">
+        <label for="inex">inexperienced inf</label>
+    
+        <input type="radio" id="reg" name="gender" value="4" checked>
+        <label for="reg">regular inf</label>
+    
+        <input type="radio" id="vet" name="gender" value="5">
+        <label for="vet">veteran inf</label>
+      </form>
+      
+      <p class="title result"></p>
+    </div>
+    
+    <div class="probabilities">
+      <b>Probabilities</b><br>
+      hits <span class="hits"></span> |
+      casualties <span class="casualties"></span>
+    </div>
+    
+    <div class="legend">
+      <b>Legend</b>
+      <div><span>∞</span> = nigh impossible shot (requires 6, followed by an additional 6 on <b>to hit</b> roll)</div>
+      <div><span>E</span> = exceptional damage (any <b>to damage</b> roll of 6, followed by an additional 6)</div>
+      <div><span>F</span> = failure (regardless of any modifiers, a roll of a <b>1</b> is always a failure)</div>
+    </div>
+    
+    <div class='results'></div>
+    <p>
+      <button type='button' id="shoot" onclick="attack()">Shoot</button>
+    </p>
+    
+    <script type="text/javascript" src="engine.js"></script>
+  </body>
+</html>
