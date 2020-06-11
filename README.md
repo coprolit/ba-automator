@@ -14,6 +14,9 @@ Install Typescript.
 npm install
 ```
 
+### Develop
+Make changes with your favorite IDE and the power of Typescript.
+
 ### Compile
 ```shell
 npm run build
