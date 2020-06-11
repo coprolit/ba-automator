@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+      "module": "es6",
+      "noImplicitAny": true,
+      "removeComments": true,
+      "lib": [
+        "es2019",
+        "dom"
+      ]
+      // "preserveConstEnums": true,
+      // "sourceMap": true
+  },
+  "files": [
+      "engine.ts"
+  ]
+}

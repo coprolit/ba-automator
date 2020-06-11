@@ -1,4 +1,4 @@
-import {Army} from './models';
+import {Army, Model, Selections, Shot, Hit, Damage} from './models';
 
 // TODO
 // long range pen penalty
@@ -153,7 +153,7 @@ const armies: Army[] = [
 ];
 
 // Dynamic state:
-const selections = {
+const selections: Selections = {
   unit: null,
   range: 0,
   cover: 0,
@@ -162,12 +162,12 @@ const selections = {
 }
 
 // Combat utility methods:
-function shoot(models, modifier, damageValue) {
+function shoot(models: Array<Model>, modifier: number, damageValue: number): Shot[] {
   
   // Resolve each shot:
   const shots = models
     // from models, map over to shots:
-    .flatMap(model => {
+    .flatMap((model: Model) => {
       // 1-element array to keep the item, a multiple-element array to add items, or a 0-element array to remove the item.
       const weaponShots = [];
       
@@ -180,14 +180,14 @@ function shoot(models, modifier, damageValue) {
       return weaponShots;
     })
     // resolve hit rolls:
-    .map(shot => {
+    .map((shot: Shot) => {
       return {
        ...shot,
        hit: rollToHit(modifier)
       } 
     })
     // resolve damage rolls:
-    .map(shot => {
+    .map((shot: Shot) => {
       const damage = rollToDamage(shot.weapon.pen, damageValue);
       
       return {
@@ -199,7 +199,7 @@ function shoot(models, modifier, damageValue) {
   return shots;
 }
 
-function getShots(models) {
+function getShots(models: Model[]) {
   return models.flatMap(model => {
     // 1-element array to keep the item,
     // a multiple-element array to add items,
@@ -214,7 +214,7 @@ function getShots(models) {
   })
 }
 
-function rollToHit(modifier) {
+function rollToHit(modifier: number): Hit {
   // Roll 1d6 + to hit modifiers per shot.
   // Roll of a 1 is always a failure.
   // Result >= 3 = hit
@@ -234,7 +234,7 @@ function rollToHit(modifier) {
   };
 }
 
-function rollToDamage(pen, damageValue) {
+function rollToDamage(pen: number, damageValue: number): Damage {
   // Roll 1d6 + Pen value for each hit.
   // Result >= Damage value = damage
   // An unmodified roll of 1 always fails to damage.
@@ -266,7 +266,7 @@ function attack() {
   const unit = selections.unit;
   const toHitModifiers = getToHitModifiers();
   const damageValue = selections.target;
-  const result = shoot(unit.models, toHitModifiers, damageValue);
+  const result: Shot[] = shoot(unit.models, toHitModifiers, damageValue);
   
   const probabilities = getProbabilities();
   
@@ -300,13 +300,13 @@ function attack() {
 }
 
 // UI utility methods:
-function toHitProbability(shots, modifier) {
+function toHitProbability(shots: number, modifier: number) {
   // to hit penalty is more than -3 = nigh imposible shot = requires a 6 followed by a 6.
   const factor = modifier < -3 ? 1/6 * 1/6 : (4 + modifier) / 6;
   return shots * factor;
 }
 
-function toDamageProbability(toHit, pen, damageValue) {
+function toDamageProbability(toHit: number, pen: number, damageValue: number) {
   return toHit * (7 - damageValue - pen) / 6;
 }
 
@@ -314,7 +314,7 @@ function getProbabilities() {
   const unit = selections.unit;
   const damageValue = selections.target;
   const modifiersTotal = selections.cover + selections.range + selections.down + selections.unit.toHit;
-  const toHitProb = toHitProbability(getShots(unit.models).length, modifiersTotal).toFixed(2);
+  const toHitProb = Number(toHitProbability(getShots(unit.models).length, modifiersTotal).toFixed(2));
   const toDamageProb = toDamageProbability(toHitProb, 0, damageValue).toFixed(2);
   
   return {
@@ -329,7 +329,7 @@ function updateProbabilities() {
   const modifiersTotal = getToHitModifiers();
   const probabilities = getProbabilities();
   
-  document.querySelector('.hits').innerHTML = probabilities.toHit;
+  document.querySelector('.hits').innerHTML = probabilities.toHit.toString();
   document.querySelector('.casualties').innerHTML = probabilities.toDamage;
   document.querySelector('.modifiers .result').innerHTML = `
        To hit modifier: ${modifiersTotal < -3 ? '∞' : modifiersTotal } | Target damage value: ${damageValue}
@@ -361,7 +361,8 @@ interface ChangeEvent {
 const formUnits = document.querySelector('.units form');
 formUnits.addEventListener('change', (event: Event) => {
   // set selected unit:
-  selections.unit = armies[0].units[(<HTMLInputElement>event.target).value];
+  const index: number = Number((<HTMLInputElement>event.target).value);
+  selections.unit = armies[0].units[index];
   updateProbabilities();
 });
 

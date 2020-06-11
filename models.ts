@@ -9,9 +9,9 @@ export interface Model {
   weapon: Weapon
 }
 
-export interface Units {
+export interface Unit {
   name: string;
-  models: Model[];
+  models: Array<Model>;
   toHit: number;
   damageValue: number;
   cost: number;
@@ -19,5 +19,28 @@ export interface Units {
 
 export interface Army {
   name: string;
-  units: Units[]
+  units: Unit[]
+}
+
+export interface Selections {
+  unit: Unit | null;
+  range: number;
+  cover: number;
+  target: number;
+  down: number;
+}
+
+export interface Hit {
+  roll: number|string;
+  success: boolean;
+}
+export interface Damage {
+  roll: number|string;
+  success: boolean;
+  crit: boolean;
+}
+export interface Shot {
+  weapon: Weapon;
+  hit?: Hit;
+  damage?: Damage;
 }

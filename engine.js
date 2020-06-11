@@ -1,4 +1,3 @@
-"use strict";
 var __assign = (this && this.__assign) || function () {
     __assign = Object.assign || function(t) {
         for (var s, i = 1, n = arguments.length; i < n; i++) {
@@ -10,9 +9,6 @@ var __assign = (this && this.__assign) || function () {
     };
     return __assign.apply(this, arguments);
 };
-exports.__esModule = true;
-// TODO
-// long range pen penalty
 var rifle = {
     range: 24,
     shots: 1,
@@ -33,7 +29,6 @@ var unarmed = {
     shots: 0,
     pen: 0
 };
-// Stored army lists:
 var armies = [
     {
         name: "Red Army",
@@ -160,7 +155,6 @@ var armies = [
         ]
     }
 ];
-// Dynamic state:
 var selections = {
     unit: null,
     range: 0,
@@ -168,13 +162,9 @@ var selections = {
     target: 4,
     down: 0
 };
-// Combat utility methods:
 function shoot(models, modifier, damageValue) {
-    // Resolve each shot:
     var shots = models
-        // from models, map over to shots:
         .flatMap(function (model) {
-        // 1-element array to keep the item, a multiple-element array to add items, or a 0-element array to remove the item.
         var weaponShots = [];
         for (var i = 0; i < model.weapon.shots; i++) {
             weaponShots.push({
@@ -183,11 +173,9 @@ function shoot(models, modifier, damageValue) {
         }
         return weaponShots;
     })
-        // resolve hit rolls:
         .map(function (shot) {
         return __assign(__assign({}, shot), { hit: rollToHit(modifier) });
     })
-        // resolve damage rolls:
         .map(function (shot) {
         var damage = rollToDamage(shot.weapon.pen, damageValue);
         return __assign(__assign({}, shot), { damage: shot.hit.success ? damage : null });
@@ -196,9 +184,6 @@ function shoot(models, modifier, damageValue) {
 }
 function getShots(models) {
     return models.flatMap(function (model) {
-        // 1-element array to keep the item,
-        // a multiple-element array to add items,
-        // or a 0-element array to remove the item.
         var shots = [];
         for (var i = 0; i < model.weapon.shots; i++) {
             shots.push({
@@ -209,13 +194,8 @@ function getShots(models) {
     });
 }
 function rollToHit(modifier) {
-    // Roll 1d6 + to hit modifiers per shot.
-    // Roll of a 1 is always a failure.
-    // Result >= 3 = hit
-    // modifier is more than -3 = NIGH IMPOSSIBLE SHOT
     var result = roll();
     var total = result === 1 ? 'F' : result + modifier;
-    // If necessary, roll for nigh impossible shot:
     var imposShot;
     if (modifier < -3 && result === 6) {
         imposShot = roll() === 6;
@@ -226,9 +206,6 @@ function rollToHit(modifier) {
     };
 }
 function rollToDamage(pen, damageValue) {
-    // Roll 1d6 + Pen value for each hit.
-    // Result >= Damage value = damage
-    // An unmodified roll of 1 always fails to damage.
     var result = roll();
     var total = result === 1 ? 'F' : result + pen;
     return {
@@ -238,13 +215,11 @@ function rollToDamage(pen, damageValue) {
     };
 }
 function roll() {
-    // returns a random integer from 1 to 6
     return Math.floor(Math.random() * 6) + 1;
 }
 function getToHitModifiers() {
     return selections.unit.toHit + selections.cover + selections.range + selections.down;
 }
-// Simulator
 function attack() {
     if (!selections.unit) {
         return;
@@ -264,9 +239,7 @@ function attack() {
         return "<span class=\"" + ((shot.damage && shot.damage.success) ? 'success' : 'failure') + "\">\n                " + (shot.damage ? (shot.damage.crit ? 'E' : shot.damage.roll) : '') + "\n              </span>";
     }).join('') + " (damage rolls + pen modifiers)\n        </div>\n        <div>\n          Hits: <b>" + result.filter(function (shot) { return shot.hit.success; }).length + "</b> (" + probabilities.toHit + ") |  Casualties: <b>" + result.filter(function (shot) { return shot.damage && shot.damage.success; }).length + "</b> (" + probabilities.toDamage + ")\n        </div>\n      </p>");
 }
-// UI utility methods:
 function toHitProbability(shots, modifier) {
-    // to hit penalty is more than -3 = nigh imposible shot = requires a 6 followed by a 6.
     var factor = modifier < -3 ? 1 / 6 * 1 / 6 : (4 + modifier) / 6;
     return shots * factor;
 }
@@ -277,7 +250,7 @@ function getProbabilities() {
     var unit = selections.unit;
     var damageValue = selections.target;
     var modifiersTotal = selections.cover + selections.range + selections.down + selections.unit.toHit;
-    var toHitProb = toHitProbability(getShots(unit.models).length, modifiersTotal).toFixed(2);
+    var toHitProb = Number(toHitProbability(getShots(unit.models).length, modifiersTotal).toFixed(2));
     var toDamageProb = toDamageProbability(toHitProb, 0, damageValue).toFixed(2);
     return {
         toHit: toHitProb,
@@ -289,12 +262,10 @@ function updateProbabilities() {
     var damageValue = selections.target;
     var modifiersTotal = getToHitModifiers();
     var probabilities = getProbabilities();
-    document.querySelector('.hits').innerHTML = probabilities.toHit;
+    document.querySelector('.hits').innerHTML = probabilities.toHit.toString();
     document.querySelector('.casualties').innerHTML = probabilities.toDamage;
     document.querySelector('.modifiers .result').innerHTML = "\n       To hit modifier: " + (modifiersTotal < -3 ? '∞' : modifiersTotal) + " | Target damage value: " + damageValue + "\n  ";
 }
-// UI:
-// populate unit selector:
 document.querySelector('.units form').innerHTML =
     armies[0]
         .units
@@ -303,31 +274,27 @@ document.querySelector('.units form').innerHTML =
     }).join('');
 var formUnits = document.querySelector('.units form');
 formUnits.addEventListener('change', function (event) {
-    // set selected unit:
-    selections.unit = armies[0].units[event.target.value];
+    var index = Number(event.target.value);
+    selections.unit = armies[0].units[index];
     updateProbabilities();
 });
 var formRange = document.querySelector('form.range');
 formRange.addEventListener('change', function (event) {
-    // set selected unit:
     selections.range = parseInt(event.target.value);
     updateProbabilities();
 });
 var formCover = document.querySelector('form.cover');
 formCover.addEventListener('change', function (event) {
-    // set selected unit:
     selections.cover = Number(event.target.value);
     updateProbabilities();
 });
 var formDamageValue = document.querySelector('form.damageValue');
 formDamageValue.addEventListener('change', function (event) {
-    // set selected unit:
     selections.target = parseInt(event.target.value);
     updateProbabilities();
 });
 var checkboxDown = document.querySelector('input[id="down"]');
 checkboxDown.addEventListener('change', function () {
-    // set selected unit:
     selections.down = checkboxDown.checked ? -2 : 0;
     updateProbabilities();
 });
