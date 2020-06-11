@@ -13,4 +13,4 @@ jobs:
           user-name: "coprolit"
           user-email: "philippesimpson@gmail.com"
           message: "Automatically built unbuilt typescript"
-          directories: ./src
+          directories: ./
