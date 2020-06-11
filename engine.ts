@@ -1,12 +1,7 @@
+import {Army} from './models';
+
 // TODO
 // long range pen penalty
-
-// Weapon types:
-interface Weapon {
-  range: number;
-  shots: number;
-  pen: number;
-}
 
 const rifle = {
   range: 24,
@@ -30,23 +25,6 @@ const unarmed = {
 }
 
 // Stored army lists:
-interface Model {
-  weapon: Weapon
-}
-
-interface Units {
-  name: string;
-  models: Model[];
-  toHit: number;
-  damageValue: number;
-  cost: number;
-}
-
-interface Army {
-  name: string;
-  units: Units[]
-}
-
 const armies: Army[] = [
   {
     name: "Red Army",
