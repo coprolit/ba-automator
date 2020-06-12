@@ -6,11 +6,9 @@
       "lib": [
         "es2019",
         "dom"
-      ]
-      // "preserveConstEnums": true,
-      // "sourceMap": true
+      ],
+      "outDir": "" // dump in root
   },
-  "files": [
-      "engine.ts"
-  ]
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "**/*.spec.ts"]
 }
