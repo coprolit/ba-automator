@@ -298,3 +298,4 @@ checkboxDown.addEventListener('change', function () {
     selections.down = checkboxDown.checked ? -2 : 0;
     updateProbabilities();
 });
+//# sourceMappingURL=engine.js.map
