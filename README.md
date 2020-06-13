@@ -17,13 +17,14 @@ npm install
 ### Develop
 Make changes with your favorite IDE and the power of Typescript.
 
-### Compile
+### Build
 ```shell
-npm run build
+npm run compile
 ```
+Compiles .ts files from `src/`into root folder.
 
 ### Deploy
-Commit changes and:
+Commit changes on a feature branch and:
 ```shell
 git push origin master
 ```
