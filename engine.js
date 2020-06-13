@@ -163,22 +163,12 @@ var selections = {
     down: 0
 };
 function shoot(models, modifier, damageValue) {
-    var shots = models
-        .flatMap(function (model) {
-        var weaponShots = [];
-        for (var i = 0; i < model.weapon.shots; i++) {
-            weaponShots.push({
-                weapon: model.weapon
-            });
-        }
-        return weaponShots;
-    })
+    var shots = getShots(models)
         .map(function (shot) {
         return __assign(__assign({}, shot), { hit: rollToHit(modifier) });
     })
         .map(function (shot) {
-        var damage = rollToDamage(shot.weapon.pen, damageValue);
-        return __assign(__assign({}, shot), { damage: shot.hit.success ? damage : null });
+        return __assign(__assign({}, shot), { damage: shot.hit.success ? rollToDamage(shot.weapon.pen, damageValue) : null });
     });
     return shots;
 }
@@ -187,22 +177,20 @@ function getShots(models) {
         var shots = [];
         for (var i = 0; i < model.weapon.shots; i++) {
             shots.push({
-                pen: model.weapon.pen
+                weapon: model.weapon
             });
         }
         return shots;
     });
 }
 function rollToHit(modifier) {
-    var result = roll();
-    var total = result === 1 ? 'F' : result + modifier;
-    var imposShot;
-    if (modifier < -3 && result === 6) {
-        imposShot = roll() === 6;
-    }
+    var dice = roll();
+    var imposSuccess = modifier < -3 && dice === 6 && roll() === 6;
+    var result = dice === 1 ? 'F' : (imposSuccess ? '∞' : dice);
     return {
-        roll: imposShot ? '∞' : total,
-        success: result !== 1 && (imposShot || total > 2)
+        roll: result,
+        modifier: modifier,
+        success: dice !== 1 && (imposSuccess || dice + modifier > 2)
     };
 }
 function rollToDamage(pen, damageValue) {
@@ -210,6 +198,7 @@ function rollToDamage(pen, damageValue) {
     var total = result === 1 ? 'F' : result + pen;
     return {
         roll: total,
+        modifier: pen,
         success: result !== 1 && result + pen >= damageValue,
         crit: result === 6 && roll() === 6
     };

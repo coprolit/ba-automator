@@ -165,20 +165,7 @@ const selections: Selections = {
 function shoot(models: Array<Model>, modifier: number, damageValue: number): Shot[] {
   
   // Resolve each shot:
-  const shots = models
-    // from models, map over to shots:
-    .flatMap((model: Model) => {
-      // 1-element array to keep the item, a multiple-element array to add items, or a 0-element array to remove the item.
-      const weaponShots = [];
-      
-      for(let i = 0; i < model.weapon.shots; i++) {
-        weaponShots.push({
-          weapon: model.weapon
-        });
-      }
-      
-      return weaponShots;
-    })
+  const shots: Shot[] = getShots(models)
     // resolve hit rolls:
     .map((shot: Shot) => {
       return {
@@ -188,11 +175,9 @@ function shoot(models: Array<Model>, modifier: number, damageValue: number): Sho
     })
     // resolve damage rolls:
     .map((shot: Shot) => {
-      const damage = rollToDamage(shot.weapon.pen, damageValue);
-      
       return {
         ...shot,
-        damage: shot.hit.success ? damage : null
+        damage: shot.hit.success ? rollToDamage(shot.weapon.pen, damageValue) : null
       }
     });
   
@@ -200,6 +185,7 @@ function shoot(models: Array<Model>, modifier: number, damageValue: number): Sho
 }
 
 function getShots(models: Model[]) {
+  // from models, map over to shots:
   return models.flatMap(model => {
     // 1-element array to keep the item,
     // a multiple-element array to add items,
@@ -207,7 +193,7 @@ function getShots(models: Model[]) {
     const shots = [];
     for(let i = 0; i < model.weapon.shots; i++) {
       shots.push({
-        pen: model.weapon.pen
+        weapon: model.weapon
       });
     }
     return shots;
@@ -216,39 +202,46 @@ function getShots(models: Model[]) {
 
 function rollToHit(modifier: number): Hit {
   // Roll 1d6 + to hit modifiers per shot.
-  // Roll of a 1 is always a failure.
-  // Result >= 3 = hit
-  // modifier is more than -3 = NIGH IMPOSSIBLE SHOT
-  const result = roll();
-  let total = result === 1 ? 'F' : result + modifier;
   
-  // If necessary, roll for nigh impossible shot:
-  let imposShot;
-  if (modifier < -3 && result === 6) {
-    imposShot = roll() === 6;
-  }
+  // Roll of a 1 is always a failure.
+  
+  // If modifier is more than -3 (nigh impossible shot),
+  // need to roll a 6 followed by a 6.
+
+  // Result > 2 = successful hit.
+
+  const dice: number = roll();
+  
+  // If modifier is more severe than -3 = nigh impossible shot.
+  // Need to roll a 6 followed by a 6 to succeed:
+  const imposSuccess = modifier < -3 && dice === 6 && roll() === 6;
+
+  // Result is either a failure, the dice roll (2-6), or a nigh impossible success
+  let result = dice === 1 ? 'F' : (imposSuccess ? '∞' : dice);
   
   return {
-    roll: imposShot ? '∞' : total,
-    success: result !== 1 && (imposShot || total > 2)
+    roll: result,
+    modifier: modifier,
+    success: dice !== 1 && (imposSuccess || dice + modifier > 2)
   };
 }
 
 function rollToDamage(pen: number, damageValue: number): Damage {
   // Roll 1d6 + Pen value for each hit.
-  // Result >= Damage value = damage
+  // Result >= Damage value  = damage
   // An unmodified roll of 1 always fails to damage.
   const result = roll();
   let total = result === 1 ? 'F' : result + pen;
   
   return {
     roll: total,
+    modifier: pen,
     success: result !== 1 && result + pen >= damageValue,
     crit: result === 6 && roll() === 6
   };
 }
 
-function roll() {
+function roll(): number {
   // returns a random integer from 1 to 6
   return Math.floor(Math.random() * 6) + 1;
 }

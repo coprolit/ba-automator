@@ -32,10 +32,12 @@ export interface Selections {
 
 export interface Hit {
   roll: number|string;
+  modifier: number;
   success: boolean;
 }
 export interface Damage {
   roll: number|string;
+  modifier: number;
   success: boolean;
   crit: boolean;
 }
@@ -43,4 +45,5 @@ export interface Shot {
   weapon: Weapon;
   hit?: Hit;
   damage?: Damage;
+
 }
