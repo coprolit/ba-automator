@@ -1,12 +1,15 @@
 // Weapon types:
 export interface Weapon {
+  name: string;
   range: number;
   shots: number;
   pen: number;
 }
 
 export interface Model {
-  weapon: Weapon
+  weapon: Weapon,
+  weapon2?: Weapon,
+  crewman?: boolean;
 }
 
 export interface Unit {

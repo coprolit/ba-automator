@@ -1,6 +1,5 @@
-h4 {
-  margin-bottom: 2px;
-  margin-top: 10px;
+h3 {
+  margin-block-start: auto;
 }
 
 .title {
@@ -24,14 +23,18 @@ h4 {
   font-style: italic;
 }
 
-.units {
+.panel {
   padding: 10px;
-  background-color: LightGoldenRodYellow;
+  border: 1px solid lightgrey;
+  margin-block-start: 10px; 
+  writing-mode: horizontal-tb;
 }
-.modifiers {
+
+.box {
   padding: 10px;
-  background-color: Khaki;
+  background-color: lightgrey;
 }
+
 .probabilities {
   padding: 10px;
   background-color: DarkKhaki

@@ -1,28 +1,57 @@
-import {Army, Model, Selections, Shot, Hit, Damage} from './models';
-
-// TODO
-// long range pen penalty
+import {Army, Model, Selections, Shot, Hit, Damage, Weapon} from './models';
 
 const rifle = {
+  name: "Rifle",
   range: 24,
   shots: 1,
   pen: 0
 }
 const smg = {
+  name: "SMG",
   range: 12,
   shots: 2,
   pen: 0
 }
 const atr = {
+  name: "Anti-tank Rifle",
   range: 36,
   shots: 1,
   pen: 2
 }
+const assaultRifle = {
+  name: "Assault Rifle",
+  range: 18,
+  shots: 2,
+  pen: 0
+}
+const autoRifle = {
+  name: "Automatic Rifle",
+  range: 30,
+  shots: 2,
+  pen: 0
+}
+const lmg = {
+  name: "LMG",
+  range: 36,
+  shots: 4,
+  pen: 0
+}
+const panzerfaust = {
+  name: "Panzerfaust",
+  range: 12,
+  shots: 1,
+  pen: 6
+}
 const unarmed = {
+  name: "Unarmed",
   range: 0,
   shots: 0,
   pen: 0
 }
+
+const weapons: Weapon[] = [
+  rifle, smg, assaultRifle, autoRifle, lmg, atr, panzerfaust, unarmed, 
+]
 
 // Stored army lists:
 const armies: Army[] = [
@@ -160,6 +189,8 @@ const selections: Selections = {
   target: 4,
   down: 0
 }
+
+const selectedWeapons: Weapon[] = [];
 
 // Combat utility methods:
 function shoot(models: Array<Model>, modifier: number, damageValue: number): Shot[] {
@@ -330,8 +361,16 @@ function updateProbabilities() {
 }
 
 // UI:
+
+// populate weapons selector:
+document.querySelector('#addWeapon select').innerHTML =
+  weapons
+    .map((weapon, index) =>
+      `<option value="${index}">${weapon.name}</option>`
+     ).join('');
+
 // populate unit selector:
-document.querySelector('.units form').innerHTML =
+/* document.querySelector('.units form').innerHTML =
   armies[0]
     .units
     .map((unit, index) =>
@@ -344,12 +383,63 @@ document.querySelector('.units form').innerHTML =
         / cost ${unit.cost} pts)
        </label>
        <br>`
-     ).join('');
+     ).join(''); */
 
 // form handlers:
-interface ChangeEvent {
-  target: HTMLInputElement;
-}
+
+const formWeapons: HTMLFormElement = document.querySelector('#addWeapon');
+formWeapons.addEventListener('submit', (event: Event) => {
+  event.preventDefault();
+
+  const formdata = new FormData(formWeapons);
+  const amount = Number(formdata.get('amount'));
+  const selectedWeaponType = weapons[Number(formdata.get('type'))];
+  
+  for (let i = 0; i < amount; i++) {
+    selectedWeapons.push(selectedWeaponType)
+  }
+
+  document.querySelector('.selection').insertAdjacentHTML('afterbegin', `
+    <div>${formdata.get('amount')} ${weapons[Number(formdata.get('type'))].name}</div>
+  `)
+});
+
+const weaponsSubmit: HTMLHtmlElement = document.querySelector('.selection input');
+weaponsSubmit.addEventListener('click', () => {
+  // sort weapon types:
+  selectedWeapons.sort((a, b) => {
+    let comparison = 0;
+    if (a.name > b.name) {
+      comparison = 1;
+    } else if (a.name < b.name) {
+      comparison = -1;
+    }
+    return comparison;
+  });
+
+  
+  document.querySelector('.modifiers .weapons').innerHTML = `
+    ${selectedWeapons.map((weapon, index) => 
+      `<div>
+        ${weapon.name} :
+        <input type="radio" id="close" value="1" name="${weapon.name}${index}">
+        <label for="close">close</label>
+    
+        <input type="radio" id="short" value="0" name="${weapon.name}${index}" checked>
+        <label for="short">short</label>
+    
+        <input type="radio" id="long" value="-1" name="${weapon.name}${index}">
+        <label for="long">long</label>
+        
+        ${weapon.name === 'Anti-tank Rifle' || weapon.name === 'LMG' ?
+          '<input type="checkbox" id="missing" name="loader" value="-1">' +
+          '<label for="loader">no loader</label>' : ''
+        }
+      </div>`
+    ).join('')}
+  `;
+  console.log(selectedWeapons)
+})
 
 const formUnits = document.querySelector('.units form');
 formUnits.addEventListener('change', (event: Event) => {

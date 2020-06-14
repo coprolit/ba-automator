@@ -5,25 +5,27 @@
     <link href="style.css" rel="stylesheet">
   </head>
   <body>
-    <div class="units">
-      <b>Select shooter</b>
-      <form></form>
+    <div class="panel">
+      <h3>Add weapons to shoot</h3>
+      <form id="addWeapon">
+        <select name="type"></select>
+        <input name="amount" type="number" min="1" max="20" value="1">
+        <input type="submit" value="Add">
+      </form>
+      <div class="selection box">
+          <input type="submit" value="Submit">
+      </div>
     </div>
     
-    <div class="modifiers">
-      <b>Select modifiers</b>
-      <h4>Attackers</h4>
-      <form class="range">
-        <label>Range:</label>
-        <input type="radio" id="close" value="1" name="gender">
-        <label for="close">close</label>
+    <!-- <div class="units panel">
+      <h3>Shooters</h3>
+      <form></form>
+    </div> -->
     
-        <input type="radio" id="short" value="0" name="gender" checked>
-        <label for="short">short</label>
-    
-        <input type="radio" id="long" value="-1" name="gender">
-        <label for="long">long</label>
-      </form>
+    <div class="panel modifiers">
+      <h3>Modifiers</h3>
+      <div class="weapons">
+      </div>
     
       <h4>Target</h4>
       <form class="cover">

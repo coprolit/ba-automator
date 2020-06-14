@@ -10,25 +10,56 @@ var __assign = (this && this.__assign) || function () {
     return __assign.apply(this, arguments);
 };
 var rifle = {
+    name: "Rifle",
     range: 24,
     shots: 1,
     pen: 0
 };
 var smg = {
+    name: "SMG",
     range: 12,
     shots: 2,
     pen: 0
 };
 var atr = {
+    name: "Anti-tank Rifle",
     range: 36,
     shots: 1,
     pen: 2
 };
+var assaultRifle = {
+    name: "Assault Rifle",
+    range: 18,
+    shots: 2,
+    pen: 0
+};
+var autoRifle = {
+    name: "Automatic Rifle",
+    range: 30,
+    shots: 2,
+    pen: 0
+};
+var lmg = {
+    name: "LMG",
+    range: 36,
+    shots: 4,
+    pen: 0
+};
+var panzerfaust = {
+    name: "Panzerfaust",
+    range: 12,
+    shots: 1,
+    pen: 6
+};
 var unarmed = {
+    name: "Unarmed",
     range: 0,
     shots: 0,
     pen: 0
 };
+var weapons = [
+    rifle, smg, assaultRifle, autoRifle, lmg, atr, panzerfaust, unarmed,
+];
 var armies = [
     {
         name: "Red Army",
@@ -162,6 +193,7 @@ var selections = {
     target: 4,
     down: 0
 };
+var selectedWeapons = [];
 function shoot(models, modifier, damageValue) {
     var shots = getShots(models)
         .map(function (shot) {
@@ -255,12 +287,41 @@ function updateProbabilities() {
     document.querySelector('.casualties').innerHTML = probabilities.toDamage;
     document.querySelector('.modifiers .result').innerHTML = "\n       To hit modifier: " + (modifiersTotal < -3 ? '∞' : modifiersTotal) + " | Target damage value: " + damageValue + "\n  ";
 }
-document.querySelector('.units form').innerHTML =
-    armies[0]
-        .units
-        .map(function (unit, index) {
-        return "<input type=\"radio\" id=\"" + unit.name + "\" name=\"unit\" value=\"" + index + "\">\n       <label for=\"" + unit.name + "\">\n        " + unit.name + " \n        (" + getShots(unit.models).length + " shots\n        / " + unit.models.length + " bodies\n        / range " + unit.models[0].weapon.range + "\n        / cost " + unit.cost + " pts)\n       </label>\n       <br>";
+document.querySelector('#addWeapon select').innerHTML =
+    weapons
+        .map(function (weapon, index) {
+        return "<option value=\"" + index + "\">" + weapon.name + "</option>";
     }).join('');
+var formWeapons = document.querySelector('#addWeapon');
+formWeapons.addEventListener('submit', function (event) {
+    event.preventDefault();
+    var formdata = new FormData(formWeapons);
+    var amount = Number(formdata.get('amount'));
+    var selectedWeaponType = weapons[Number(formdata.get('type'))];
+    for (var i = 0; i < amount; i++) {
+        selectedWeapons.push(selectedWeaponType);
+    }
+    document.querySelector('.selection').insertAdjacentHTML('afterbegin', "\n    <div>" + formdata.get('amount') + " " + weapons[Number(formdata.get('type'))].name + "</div>\n  ");
+});
+var weaponsSubmit = document.querySelector('.selection input');
+weaponsSubmit.addEventListener('click', function () {
+    selectedWeapons.sort(function (a, b) {
+        var comparison = 0;
+        if (a.name > b.name) {
+            comparison = 1;
+        }
+        else if (a.name < b.name) {
+            comparison = -1;
+        }
+        return comparison;
+    });
+    document.querySelector('.modifiers .weapons').innerHTML = "\n    " + selectedWeapons.map(function (weapon, index) {
+        return "<div>\n        " + weapon.name + " :\n        <input type=\"radio\" id=\"close\" value=\"1\" name=\"" + weapon.name + index + "\">\n        <label for=\"close\">close</label>\n    \n        <input type=\"radio\" id=\"short\" value=\"0\" name=\"" + weapon.name + index + "\" checked>\n        <label for=\"short\">short</label>\n    \n        <input type=\"radio\" id=\"long\" value=\"-1\" name=\"" + weapon.name + index + "\">\n        <label for=\"long\">long</label>\n        \n        " + (weapon.name === 'Anti-tank Rifle' || weapon.name === 'LMG' ?
+            '<input type="checkbox" id="missing" name="loader" value="-1">' +
+                '<label for="loader">no loader</label>' : '') + "\n      </div>";
+    }).join('') + "\n  ";
+    console.log(selectedWeapons);
+});
 var formUnits = document.querySelector('.units form');
 formUnits.addEventListener('change', function (event) {
     var index = Number(event.target.value);
