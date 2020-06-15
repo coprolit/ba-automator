@@ -6,6 +6,14 @@ export interface Weapon {
   pen: number;
 }
 
+export interface ShootingWeapon extends Weapon {
+  modifiers?: {
+    range: 'c' | 's' | 'l';
+    moved: boolean;
+    loader: boolean;
+  }
+}
+
 export interface Model {
   weapon: Weapon,
   weapon2?: Weapon,
@@ -33,12 +41,7 @@ export interface Selections {
   down: number;
 }
 
-export interface Hit {
-  roll: number|string;
-  modifier: number;
-  success: boolean;
-}
-export interface Damage {
+export interface Score {
   roll: number|string;
   modifier: number;
   success: boolean;
@@ -46,7 +49,6 @@ export interface Damage {
 }
 export interface Shot {
   weapon: Weapon;
-  hit?: Hit;
-  damage?: Damage;
-
+  hit?: Score;
+  damage?: Score;
 }

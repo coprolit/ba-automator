@@ -1,4 +1,4 @@
-import {Army, Model, Selections, Shot, Hit, Damage, Weapon} from './models';
+import {Army, Model, Selections, Shot, Score, Weapon, ShootingWeapon} from './models';
 
 const rifle = {
   name: "Rifle",
@@ -190,7 +190,7 @@ const selections: Selections = {
   down: 0
 }
 
-const selectedWeapons: Weapon[] = [];
+const selectedWeapons: ShootingWeapon[] = [];
 
 // Combat utility methods:
 function shoot(models: Array<Model>, modifier: number, damageValue: number): Shot[] {
@@ -231,7 +231,7 @@ function getShots(models: Model[]) {
   })
 }
 
-function rollToHit(modifier: number): Hit {
+function rollToHit(modifier: number): Score {
   // Roll 1d6 + to hit modifiers per shot.
   
   // Roll of a 1 is always a failure.
@@ -253,11 +253,12 @@ function rollToHit(modifier: number): Hit {
   return {
     roll: result,
     modifier: modifier,
-    success: dice !== 1 && (imposSuccess || dice + modifier > 2)
+    success: dice !== 1 && (imposSuccess || dice + modifier > 2),
+    crit: imposSuccess
   };
 }
 
-function rollToDamage(pen: number, damageValue: number): Damage {
+function rollToDamage(pen: number, damageValue: number): Score {
   // Roll 1d6 + Pen value for each hit.
   // Result >= Damage value  = damage
   // An unmodified roll of 1 always fails to damage.
@@ -277,22 +278,24 @@ function roll(): number {
   return Math.floor(Math.random() * 6) + 1;
 }
 
-function getToHitModifiers() {
-  return selections.unit.toHit + selections.cover + selections.range + selections.down;
+function getToHitModifiers(rangeModifier: number) {
+  return rangeModifier + selections.cover + selections.range + selections.down;
 }
 
 // Simulator
 function attack() {
-  if (!selections.unit) {
-    return;
-  }
+  // Collect shooting weapons, store selected to hit modifiers:
+  /* const weaponsElements = [].slice.call(document.querySelector('.modifiers .weapons').children);
+  weaponsElements.forEach((element: HTMLHtmlElement) => {
+    const dataAttrMap = element.dataset;
+    selectedWeapons[parseInt(dataAttrMap.index)].range = 
+    console.log(dataAttrMap)
+  }) */
   
   const unit = selections.unit;
-  const toHitModifiers = getToHitModifiers();
+  const toHitModifiers = getToHitModifiers(0);
   const damageValue = selections.target;
-  const result: Shot[] = shoot(unit.models, toHitModifiers, damageValue);
-  
-  const probabilities = getProbabilities();
+  const result: Shot[] = shoot(unit.models, toHitModifiers /* target */ , damageValue /* target */ );
   
   document
     .querySelector('.results')
@@ -317,48 +320,13 @@ function attack() {
         } (damage rolls + pen modifiers)
         </div>
         <div>
-          Hits: <b>${result.filter(shot => shot.hit.success).length}</b> (${probabilities.toHit}) |  Casualties: <b>${result.filter(shot => shot.damage && shot.damage.success).length}</b> (${probabilities.toDamage})
+          Hits: <b>${result.filter(shot => shot.hit.success).length}</b>  |  Casualties: <b>${result.filter(shot => shot.damage && shot.damage.success).length}</b>
         </div>
       </p>`
      );
 }
 
-// UI utility methods:
-function toHitProbability(shots: number, modifier: number) {
-  // to hit penalty is more than -3 = nigh imposible shot = requires a 6 followed by a 6.
-  const factor = modifier < -3 ? 1/6 * 1/6 : (4 + modifier) / 6;
-  return shots * factor;
-}
 
-function toDamageProbability(toHit: number, pen: number, damageValue: number) {
-  return toHit * (7 - damageValue - pen) / 6;
-}
-
-function getProbabilities() {
-  const unit = selections.unit;
-  const damageValue = selections.target;
-  const modifiersTotal = selections.cover + selections.range + selections.down + selections.unit.toHit;
-  const toHitProb = Number(toHitProbability(getShots(unit.models).length, modifiersTotal).toFixed(2));
-  const toDamageProb = toDamageProbability(toHitProb, 0, damageValue).toFixed(2);
-  
-  return {
-    toHit: toHitProb,
-    toDamage: toDamageProb
-  }
-}
-
-function updateProbabilities() {
-  const unit = selections.unit;
-  const damageValue = selections.target;
-  const modifiersTotal = getToHitModifiers();
-  const probabilities = getProbabilities();
-  
-  document.querySelector('.hits').innerHTML = probabilities.toHit.toString();
-  document.querySelector('.casualties').innerHTML = probabilities.toDamage;
-  document.querySelector('.modifiers .result').innerHTML = `
-       To hit modifier: ${modifiersTotal < -3 ? '∞' : modifiersTotal } | Target damage value: ${damageValue}
-  `
-}
 
 // UI:
 
@@ -368,22 +336,6 @@ document.querySelector('#addWeapon select').innerHTML =
     .map((weapon, index) =>
       `<option value="${index}">${weapon.name}</option>`
      ).join('');
-
-// populate unit selector:
-/* document.querySelector('.units form').innerHTML =
-  armies[0]
-    .units
-    .map((unit, index) =>
-      `<input type="radio" id="${unit.name}" name="unit" value="${index}">
-       <label for="${unit.name}">
-        ${unit.name} 
-        (${getShots(unit.models).length} shots
-        / ${unit.models.length} bodies
-        / range ${unit.models[0].weapon.range}
-        / cost ${unit.cost} pts)
-       </label>
-       <br>`
-     ).join(''); */
 
 // form handlers:
 
@@ -396,7 +348,14 @@ formWeapons.addEventListener('submit', (event: Event) => {
   const selectedWeaponType = weapons[Number(formdata.get('type'))];
   
   for (let i = 0; i < amount; i++) {
-    selectedWeapons.push(selectedWeaponType)
+    selectedWeapons.push({
+      ...selectedWeaponType,
+      modifiers: {
+        range: 's',
+        moved: false,
+        loader: true
+      }
+    })
   }
 
   document.querySelector('.selection').insertAdjacentHTML('afterbegin', `
@@ -416,19 +375,19 @@ weaponsSubmit.addEventListener('click', () => {
     }
     return comparison;
   });
-
   
+  // display selected weapons for modifier adjustments:
   document.querySelector('.modifiers .weapons').innerHTML = `
     ${selectedWeapons.map((weapon, index) => 
-      `<div>
+      `<div data-index="${index}">
         ${weapon.name} :
-        <input type="radio" id="close" value="1" name="${weapon.name}${index}">
+        <input type="radio" id="close" value="c" name="${index}">
         <label for="close">close</label>
     
-        <input type="radio" id="short" value="0" name="${weapon.name}${index}" checked>
+        <input type="radio" id="short" value="s" name="${index}" checked>
         <label for="short">short</label>
     
-        <input type="radio" id="long" value="-1" name="${weapon.name}${index}">
+        <input type="radio" id="long" value="l" name="${index}">
         <label for="long">long</label>
         
         ${weapon.name === 'Anti-tank Rifle' || weapon.name === 'LMG' ?
@@ -438,6 +397,13 @@ weaponsSubmit.addEventListener('click', () => {
       </div>`
     ).join('')}
   `;
+})
+
+document.querySelector('.modifiers .weapons').addEventListener('change', (event: Event) => {
+  console.log(event.target)
+  // ShootingWeapon
+  const targetEl = (<HTMLInputElement>event.target);
+  selectedWeapons[parseInt(targetEl.name)].modifiers.range = targetEl.value as 's'|'l'|'c';
   console.log(selectedWeapons)
 })
 
@@ -446,33 +412,28 @@ formUnits.addEventListener('change', (event: Event) => {
   // set selected unit:
   const index: number = Number((<HTMLInputElement>event.target).value);
   selections.unit = armies[0].units[index];
-  updateProbabilities();
 });
 
 const formRange = document.querySelector('form.range');
 formRange.addEventListener('change', (event: Event) => {
   // set selected unit:
   selections.range = parseInt((<HTMLInputElement>event.target).value);
-  updateProbabilities();
 });
 
 const formCover = document.querySelector('form.cover');
 formCover.addEventListener('change', (event: Event) => {
   // set selected unit:
   selections.cover = Number((<HTMLInputElement>event.target).value);
-  updateProbabilities();
 });
 
 const formDamageValue = document.querySelector('form.damageValue');
 formDamageValue.addEventListener('change', (event: Event) => {
   // set selected unit:
   selections.target = parseInt((<HTMLInputElement>event.target).value);
-  updateProbabilities();
 });
 
 const checkboxDown: HTMLInputElement = document.querySelector('input[id="down"]');
 checkboxDown.addEventListener('change', () => {
   // set selected unit:
   selections.down = checkboxDown.checked ? -2 : 0;
-  updateProbabilities();
 });

@@ -222,7 +222,8 @@ function rollToHit(modifier) {
     return {
         roll: result,
         modifier: modifier,
-        success: dice !== 1 && (imposSuccess || dice + modifier > 2)
+        success: dice !== 1 && (imposSuccess || dice + modifier > 2),
+        crit: imposSuccess
     };
 }
 function rollToDamage(pen, damageValue) {
@@ -238,18 +239,14 @@ function rollToDamage(pen, damageValue) {
 function roll() {
     return Math.floor(Math.random() * 6) + 1;
 }
-function getToHitModifiers() {
-    return selections.unit.toHit + selections.cover + selections.range + selections.down;
+function getToHitModifiers(rangeModifier) {
+    return rangeModifier + selections.cover + selections.range + selections.down;
 }
 function attack() {
-    if (!selections.unit) {
-        return;
-    }
     var unit = selections.unit;
-    var toHitModifiers = getToHitModifiers();
+    var toHitModifiers = getToHitModifiers(0);
     var damageValue = selections.target;
     var result = shoot(unit.models, toHitModifiers, damageValue);
-    var probabilities = getProbabilities();
     document
         .querySelector('.results')
         .insertAdjacentHTML("beforeend", "<p>\n        <div class=\"title\">\n          " + unit.name + " shoots!\n        </div>\n        <div class=\"rolls\">\n        " + result
@@ -258,34 +255,7 @@ function attack() {
     }).join('') + " (hit rolls + hit modifiers)<br>\n\n        " + result
         .map(function (shot) {
         return "<span class=\"" + ((shot.damage && shot.damage.success) ? 'success' : 'failure') + "\">\n                " + (shot.damage ? (shot.damage.crit ? 'E' : shot.damage.roll) : '') + "\n              </span>";
-    }).join('') + " (damage rolls + pen modifiers)\n        </div>\n        <div>\n          Hits: <b>" + result.filter(function (shot) { return shot.hit.success; }).length + "</b> (" + probabilities.toHit + ") |  Casualties: <b>" + result.filter(function (shot) { return shot.damage && shot.damage.success; }).length + "</b> (" + probabilities.toDamage + ")\n        </div>\n      </p>");
-}
-function toHitProbability(shots, modifier) {
-    var factor = modifier < -3 ? 1 / 6 * 1 / 6 : (4 + modifier) / 6;
-    return shots * factor;
-}
-function toDamageProbability(toHit, pen, damageValue) {
-    return toHit * (7 - damageValue - pen) / 6;
-}
-function getProbabilities() {
-    var unit = selections.unit;
-    var damageValue = selections.target;
-    var modifiersTotal = selections.cover + selections.range + selections.down + selections.unit.toHit;
-    var toHitProb = Number(toHitProbability(getShots(unit.models).length, modifiersTotal).toFixed(2));
-    var toDamageProb = toDamageProbability(toHitProb, 0, damageValue).toFixed(2);
-    return {
-        toHit: toHitProb,
-        toDamage: toDamageProb
-    };
-}
-function updateProbabilities() {
-    var unit = selections.unit;
-    var damageValue = selections.target;
-    var modifiersTotal = getToHitModifiers();
-    var probabilities = getProbabilities();
-    document.querySelector('.hits').innerHTML = probabilities.toHit.toString();
-    document.querySelector('.casualties').innerHTML = probabilities.toDamage;
-    document.querySelector('.modifiers .result').innerHTML = "\n       To hit modifier: " + (modifiersTotal < -3 ? '∞' : modifiersTotal) + " | Target damage value: " + damageValue + "\n  ";
+    }).join('') + " (damage rolls + pen modifiers)\n        </div>\n        <div>\n          Hits: <b>" + result.filter(function (shot) { return shot.hit.success; }).length + "</b>  |  Casualties: <b>" + result.filter(function (shot) { return shot.damage && shot.damage.success; }).length + "</b>\n        </div>\n      </p>");
 }
 document.querySelector('#addWeapon select').innerHTML =
     weapons
@@ -299,7 +269,11 @@ formWeapons.addEventListener('submit', function (event) {
     var amount = Number(formdata.get('amount'));
     var selectedWeaponType = weapons[Number(formdata.get('type'))];
     for (var i = 0; i < amount; i++) {
-        selectedWeapons.push(selectedWeaponType);
+        selectedWeapons.push(__assign(__assign({}, selectedWeaponType), { modifiers: {
+                range: 's',
+                moved: false,
+                loader: true
+            } }));
     }
     document.querySelector('.selection').insertAdjacentHTML('afterbegin', "\n    <div>" + formdata.get('amount') + " " + weapons[Number(formdata.get('type'))].name + "</div>\n  ");
 });
@@ -316,36 +290,36 @@ weaponsSubmit.addEventListener('click', function () {
         return comparison;
     });
     document.querySelector('.modifiers .weapons').innerHTML = "\n    " + selectedWeapons.map(function (weapon, index) {
-        return "<div>\n        " + weapon.name + " :\n        <input type=\"radio\" id=\"close\" value=\"1\" name=\"" + weapon.name + index + "\">\n        <label for=\"close\">close</label>\n    \n        <input type=\"radio\" id=\"short\" value=\"0\" name=\"" + weapon.name + index + "\" checked>\n        <label for=\"short\">short</label>\n    \n        <input type=\"radio\" id=\"long\" value=\"-1\" name=\"" + weapon.name + index + "\">\n        <label for=\"long\">long</label>\n        \n        " + (weapon.name === 'Anti-tank Rifle' || weapon.name === 'LMG' ?
+        return "<div data-index=\"" + index + "\">\n        " + weapon.name + " :\n        <input type=\"radio\" id=\"close\" value=\"c\" name=\"" + index + "\">\n        <label for=\"close\">close</label>\n    \n        <input type=\"radio\" id=\"short\" value=\"s\" name=\"" + index + "\" checked>\n        <label for=\"short\">short</label>\n    \n        <input type=\"radio\" id=\"long\" value=\"l\" name=\"" + index + "\">\n        <label for=\"long\">long</label>\n        \n        " + (weapon.name === 'Anti-tank Rifle' || weapon.name === 'LMG' ?
             '<input type="checkbox" id="missing" name="loader" value="-1">' +
                 '<label for="loader">no loader</label>' : '') + "\n      </div>";
     }).join('') + "\n  ";
+});
+document.querySelector('.modifiers .weapons').addEventListener('change', function (event) {
+    console.log(event.target);
+    var targetEl = event.target;
+    selectedWeapons[parseInt(targetEl.name)].modifiers.range = targetEl.value;
     console.log(selectedWeapons);
 });
 var formUnits = document.querySelector('.units form');
 formUnits.addEventListener('change', function (event) {
     var index = Number(event.target.value);
     selections.unit = armies[0].units[index];
-    updateProbabilities();
 });
 var formRange = document.querySelector('form.range');
 formRange.addEventListener('change', function (event) {
     selections.range = parseInt(event.target.value);
-    updateProbabilities();
 });
 var formCover = document.querySelector('form.cover');
 formCover.addEventListener('change', function (event) {
     selections.cover = Number(event.target.value);
-    updateProbabilities();
 });
 var formDamageValue = document.querySelector('form.damageValue');
 formDamageValue.addEventListener('change', function (event) {
     selections.target = parseInt(event.target.value);
-    updateProbabilities();
 });
 var checkboxDown = document.querySelector('input[id="down"]');
 checkboxDown.addEventListener('change', function () {
     selections.down = checkboxDown.checked ? -2 : 0;
-    updateProbabilities();
 });
 //# sourceMappingURL=engine.js.map
