@@ -1,4 +1,4 @@
-import {Army, Model, Selections, Shot, Score, Weapon, ShootingWeapon} from './models';
+import {Score, WeaponShooting, Shot, Target, Weapon, WeaponResult} from './models';
 
 const rifle = {
   name: "Rifle",
@@ -53,186 +53,59 @@ const weapons: Weapon[] = [
   rifle, smg, assaultRifle, autoRifle, lmg, atr, panzerfaust, unarmed, 
 ]
 
-// Stored army lists:
-const armies: Army[] = [
-  {
-    name: "Red Army",
-    units: [
-      {
-        name: "Inexperienced Rifle squad", 
-        models: [
-          {
-            weapon: rifle,
-          },
-          {
-            weapon: rifle
-          },
-          {
-            weapon: rifle
-          },
-          {
-            weapon: rifle
-          },
-          {
-            weapon: rifle
-          },
-          {
-            weapon: rifle
-          },
-          {
-            weapon: rifle
-          },
-          {
-            weapon: rifle
-          },
-          {
-            weapon: rifle
-          },
-          {
-            weapon: rifle
-          },
-          {
-            weapon: rifle
-          },
-          {
-            weapon: rifle
-          }
-        ],
-        toHit: -1,
-        damageValue: 3,
-        cost: 84
-      },
-      {
-        name: "Rifle squad", 
-        models: [
-          {
-            weapon: rifle
-          },
-          {
-            weapon: rifle
-          },
-          {
-            weapon: rifle
-          },
-          {
-            weapon: rifle
-          },
-          {
-            weapon: rifle
-          },
-          {
-            weapon: rifle
-          },
-          {
-            weapon: rifle
-          },
-          {
-            weapon: rifle
-          },
-        ],
-        toHit: 0,
-        damageValue: 4,
-        cost: 80
-      },
-      {
-        name: "SMG squad", 
-        models: [
-          {
-            weapon: smg
-          },
-          {
-            weapon: smg
-          },
-          {
-            weapon: smg
-          },
-          {
-            weapon: smg
-          },
-          {
-            weapon: smg
-          },
-          {
-            weapon: smg
-          },
-          {
-            weapon: smg
-          }
-        ],
-        toHit: 0,
-        damageValue: 4,
-        cost: 91
-      },
-      {
-        name: "Anti-tank Rifle team", 
-        models: [
-          {
-            weapon: atr
-          },
-          {
-            weapon: unarmed
-          }
-        ],
-        toHit: 0,
-        damageValue: 4,
-        cost: 30
-      }
-    ],
-  }
-];
-
 // Dynamic state:
-const selections: Selections = {
-  unit: null,
-  range: 0,
-  cover: 0,
-  target: 4,
-  down: 0
+const selectedWeapons: WeaponShooting[] = [];
+const target: Target = {
+  cover: 'n',
+  damageValue: 4,
+  down: false
 }
 
-const selectedWeapons: ShootingWeapon[] = [];
-
 // Combat utility methods:
-function shoot(models: Array<Model>, modifier: number, damageValue: number): Shot[] {
-  
+function shoot(weapons: WeaponShooting[], target: Target)/*:  WeaponResult[] */: any {
   // Resolve each shot:
-  const shots: Shot[] = getShots(models)
+  return weapons
+    // resolve hit rolls:
+    .map(weapon => {
+      // resolve hit rolls:
+      const shots: Shot[] = getShots(weapon);
+      const modifier = getToHitModifiers(weapon, target);
+      console.log(weapon)
+    })
+  /* const shots: Shot[] =
+    // map over to each shot:
+    getShots(weapons)
     // resolve hit rolls:
     .map((shot: Shot) => {
+      const modifier = getToHitModifiers(shot, target)
       return {
        ...shot,
        hit: rollToHit(modifier)
       } 
     })
-    // resolve damage rolls:
+    // resolve damage rolls for succesful hits:
     .map((shot: Shot) => {
       return {
         ...shot,
-        damage: shot.hit.success ? rollToDamage(shot.weapon.pen, damageValue) : null
+        damage: shot.hit.success ? rollToDamage(shot.weapon.pen, target.damageValue) : null
       }
     });
   
+  return shots; */
+}
+
+function getShots(weapon: WeaponShooting): Shot[] {
+  const shots = [];
+  for(let i = 0; i < weapon.shots; i++) {
+    shots.push({
+      weapon: weapon
+    });
+  }
   return shots;
 }
 
-function getShots(models: Model[]) {
-  // from models, map over to shots:
-  return models.flatMap(model => {
-    // 1-element array to keep the item,
-    // a multiple-element array to add items,
-    // or a 0-element array to remove the item.
-    const shots = [];
-    for(let i = 0; i < model.weapon.shots; i++) {
-      shots.push({
-        weapon: model.weapon
-      });
-    }
-    return shots;
-  })
-}
-
 function rollToHit(modifier: number): Score {
-  // Roll 1d6 + to hit modifiers per shot.
+  // Roll 1d6 + summed to hit modifiers per shot.
   
   // Roll of a 1 is always a failure.
   
@@ -243,7 +116,7 @@ function rollToHit(modifier: number): Score {
 
   const dice: number = roll();
   
-  // If modifier is more severe than -3 = nigh impossible shot.
+  // If to hit modifier is more severe than -3 = nigh impossible shot.
   // Need to roll a 6 followed by a 6 to succeed:
   const imposSuccess = modifier < -3 && dice === 6 && roll() === 6;
 
@@ -278,8 +151,23 @@ function roll(): number {
   return Math.floor(Math.random() * 6) + 1;
 }
 
-function getToHitModifiers(rangeModifier: number) {
-  return rangeModifier + selections.cover + selections.range + selections.down;
+function getToHitModifiers(weapon: WeaponShooting, target: Target) {
+
+  const coverLookup = {
+    n: 0, // none
+    s: -1, // soft
+    h: -2, // hard
+  }
+  const rangeLookup = {
+    c: 0, // close
+    s: -1, // short
+    l: -2, // long
+  }
+
+  return coverLookup[target.cover]
+    + rangeLookup[weapon.modifiers.range]
+    + (weapon.modifiers.moved ? -1 : 0)
+    + (target.down ? -2 : 0);
 }
 
 // Simulator
@@ -292,17 +180,22 @@ function attack() {
     console.log(dataAttrMap)
   }) */
   
-  const unit = selections.unit;
-  const toHitModifiers = getToHitModifiers(0);
-  const damageValue = selections.target;
-  const result: Shot[] = shoot(unit.models, toHitModifiers /* target */ , damageValue /* target */ );
+  // const toHitModifiers = getToHitModifiers(selectedWeapons, target);
+  const result: WeaponResult[] = shoot(selectedWeapons, target);
   
+  // displayShootingResult(result);
+}
+
+// UI:
+
+// display shooting result:
+/* function displayShootingResult(result: WeaponResult[]) {
   document
     .querySelector('.results')
     .insertAdjacentHTML("beforeend",
       `<p>
         <div class="title">
-          ${unit.name} shoots!
+          Unit shoots!
         </div>
         <div class="rolls">
         ${result
@@ -324,11 +217,7 @@ function attack() {
         </div>
       </p>`
      );
-}
-
-
-
-// UI:
+} */
 
 // populate weapons selector:
 document.querySelector('#addWeapon select').innerHTML =
@@ -337,48 +226,10 @@ document.querySelector('#addWeapon select').innerHTML =
       `<option value="${index}">${weapon.name}</option>`
      ).join('');
 
-// form handlers:
-
-const formWeapons: HTMLFormElement = document.querySelector('#addWeapon');
-formWeapons.addEventListener('submit', (event: Event) => {
-  event.preventDefault();
-
-  const formdata = new FormData(formWeapons);
-  const amount = Number(formdata.get('amount'));
-  const selectedWeaponType = weapons[Number(formdata.get('type'))];
-  
-  for (let i = 0; i < amount; i++) {
-    selectedWeapons.push({
-      ...selectedWeaponType,
-      modifiers: {
-        range: 's',
-        moved: false,
-        loader: true
-      }
-    })
-  }
-
-  document.querySelector('.selection').insertAdjacentHTML('afterbegin', `
-    <div>${formdata.get('amount')} ${weapons[Number(formdata.get('type'))].name}</div>
-  `)
-});
-
-const weaponsSubmit: HTMLHtmlElement = document.querySelector('.selection input');
-weaponsSubmit.addEventListener('click', () => {
-  // sort weapon types:
-  selectedWeapons.sort((a, b) => {
-    let comparison = 0;
-    if (a.name > b.name) {
-      comparison = 1;
-    } else if (a.name < b.name) {
-      comparison = -1;
-    }
-    return comparison;
-  });
-  
+function populateModifiersPanel(weapons: Weapon[]) {
   // display selected weapons for modifier adjustments:
   document.querySelector('.modifiers .weapons').innerHTML = `
-    ${selectedWeapons.map((weapon, index) => 
+    ${weapons.map((weapon, index) => 
       `<div data-index="${index}">
         ${weapon.name} :
         <input type="radio" id="close" value="c" name="${index}">
@@ -391,49 +242,93 @@ weaponsSubmit.addEventListener('click', () => {
         <label for="long">long</label>
         
         ${weapon.name === 'Anti-tank Rifle' || weapon.name === 'LMG' ?
-          '<input type="checkbox" id="missing" name="loader" value="-1">' +
-          '<label for="loader">no loader</label>' : ''
+          `<input type="checkbox" id="missing" name="${index}" value="nl">
+          <label for="loader">no loader</label>` : ''
         }
       </div>`
     ).join('')}
   `;
-})
+}
 
-document.querySelector('.modifiers .weapons').addEventListener('change', (event: Event) => {
-  console.log(event.target)
-  // ShootingWeapon
-  const targetEl = (<HTMLInputElement>event.target);
-  selectedWeapons[parseInt(targetEl.name)].modifiers.range = targetEl.value as 's'|'l'|'c';
-  console.log(selectedWeapons)
-})
+// FORM HANDLERS:
 
-const formUnits = document.querySelector('.units form');
-formUnits.addEventListener('change', (event: Event) => {
-  // set selected unit:
-  const index: number = Number((<HTMLInputElement>event.target).value);
-  selections.unit = armies[0].units[index];
+// Add weapon to selection:
+const formWeapons: HTMLFormElement = document.querySelector('#addWeapon');
+formWeapons.addEventListener('submit', (event: Event) => {
+  event.preventDefault();
+
+  const formdata = new FormData(formWeapons);
+  const amount = Number(formdata.get('amount'));
+
+  // store added weapon:
+  const selectedWeaponType = weapons[Number(formdata.get('type'))];
+  for (let i = 0; i < amount; i++) {
+    selectedWeapons.push({
+      ...selectedWeaponType,
+      modifiers: {
+        range: 's',
+        moved: false,
+        loader: true
+      }
+    })
+  }
+
+  // display in panel:
+  document.querySelector('.selection').insertAdjacentHTML('afterbegin', `
+    <div>${formdata.get('amount')} ${weapons[Number(formdata.get('type'))].name}</div>
+  `)
 });
 
-const formRange = document.querySelector('form.range');
-formRange.addEventListener('change', (event: Event) => {
-  // set selected unit:
-  selections.range = parseInt((<HTMLInputElement>event.target).value);
-});
+// Save selected weapons:
+document
+  .querySelector('.selection input')
+  .addEventListener('click', () => {
+    // sequence weapon types by name:
+    selectedWeapons.sort((a, b) => {
+    let comparison = 0;
+    if (a.name > b.name) {
+      comparison = 1;
+    } else if (a.name < b.name) {
+      comparison = -1;
+    }
+    return comparison;
+  });
+  
+    populateModifiersPanel(selectedWeapons);
+  })
 
-const formCover = document.querySelector('form.cover');
-formCover.addEventListener('change', (event: Event) => {
-  // set selected unit:
-  selections.cover = Number((<HTMLInputElement>event.target).value);
-});
+// Store shooting modifiers:
+document
+  .querySelector('.modifiers .weapons')
+  .addEventListener('change', (event: Event) => {
+    const targetEl = (<HTMLInputElement>event.target); // the weapon being interacted with
+    const value: string = targetEl.value;
 
-const formDamageValue = document.querySelector('form.damageValue');
-formDamageValue.addEventListener('change', (event: Event) => {
-  // set selected unit:
-  selections.target = parseInt((<HTMLInputElement>event.target).value);
-});
+    value === 's' || value === 'l' || value === 'c' ? 
+      // update range modifier:
+      selectedWeapons[parseInt(targetEl.name)].modifiers.range = targetEl.value as 's'|'l'|'c' :
+    value === 'nl' ?
+      // update missing loader modifier:
+      selectedWeapons[parseInt(targetEl.name)].modifiers.loader = true : void 0;
+  })
 
+// store target cover modifier:
+document
+  .querySelector('form.cover')
+  .addEventListener('change', (event: Event) => {
+    target.cover = (<HTMLInputElement>event.target).value as Target['cover'];
+  });
+
+// store target damage value modifier:
+document
+  .querySelector('form.damageValue')
+  .addEventListener('change', (event: Event) => {
+    target.damageValue = parseInt((<HTMLInputElement>event.target).value);
+  });
+
+// store target down state:
 const checkboxDown: HTMLInputElement = document.querySelector('input[id="down"]');
 checkboxDown.addEventListener('change', () => {
   // set selected unit:
-  selections.down = checkboxDown.checked ? -2 : 0;
+  target.down = checkboxDown.checked ? true : false;
 });

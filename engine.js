@@ -60,160 +60,28 @@ var unarmed = {
 var weapons = [
     rifle, smg, assaultRifle, autoRifle, lmg, atr, panzerfaust, unarmed,
 ];
-var armies = [
-    {
-        name: "Red Army",
-        units: [
-            {
-                name: "Inexperienced Rifle squad",
-                models: [
-                    {
-                        weapon: rifle
-                    },
-                    {
-                        weapon: rifle
-                    },
-                    {
-                        weapon: rifle
-                    },
-                    {
-                        weapon: rifle
-                    },
-                    {
-                        weapon: rifle
-                    },
-                    {
-                        weapon: rifle
-                    },
-                    {
-                        weapon: rifle
-                    },
-                    {
-                        weapon: rifle
-                    },
-                    {
-                        weapon: rifle
-                    },
-                    {
-                        weapon: rifle
-                    },
-                    {
-                        weapon: rifle
-                    },
-                    {
-                        weapon: rifle
-                    }
-                ],
-                toHit: -1,
-                damageValue: 3,
-                cost: 84
-            },
-            {
-                name: "Rifle squad",
-                models: [
-                    {
-                        weapon: rifle
-                    },
-                    {
-                        weapon: rifle
-                    },
-                    {
-                        weapon: rifle
-                    },
-                    {
-                        weapon: rifle
-                    },
-                    {
-                        weapon: rifle
-                    },
-                    {
-                        weapon: rifle
-                    },
-                    {
-                        weapon: rifle
-                    },
-                    {
-                        weapon: rifle
-                    },
-                ],
-                toHit: 0,
-                damageValue: 4,
-                cost: 80
-            },
-            {
-                name: "SMG squad",
-                models: [
-                    {
-                        weapon: smg
-                    },
-                    {
-                        weapon: smg
-                    },
-                    {
-                        weapon: smg
-                    },
-                    {
-                        weapon: smg
-                    },
-                    {
-                        weapon: smg
-                    },
-                    {
-                        weapon: smg
-                    },
-                    {
-                        weapon: smg
-                    }
-                ],
-                toHit: 0,
-                damageValue: 4,
-                cost: 91
-            },
-            {
-                name: "Anti-tank Rifle team",
-                models: [
-                    {
-                        weapon: atr
-                    },
-                    {
-                        weapon: unarmed
-                    }
-                ],
-                toHit: 0,
-                damageValue: 4,
-                cost: 30
-            }
-        ]
-    }
-];
-var selections = {
-    unit: null,
-    range: 0,
-    cover: 0,
-    target: 4,
-    down: 0
-};
 var selectedWeapons = [];
-function shoot(models, modifier, damageValue) {
-    var shots = getShots(models)
-        .map(function (shot) {
-        return __assign(__assign({}, shot), { hit: rollToHit(modifier) });
-    })
-        .map(function (shot) {
-        return __assign(__assign({}, shot), { damage: shot.hit.success ? rollToDamage(shot.weapon.pen, damageValue) : null });
+var target = {
+    cover: 'n',
+    damageValue: 4,
+    down: false
+};
+function shoot(weapons, target) {
+    return weapons
+        .map(function (weapon) {
+        var shots = getShots(weapon);
+        var modifier = getToHitModifiers(weapon, target);
+        console.log(weapon);
     });
-    return shots;
 }
-function getShots(models) {
-    return models.flatMap(function (model) {
-        var shots = [];
-        for (var i = 0; i < model.weapon.shots; i++) {
-            shots.push({
-                weapon: model.weapon
-            });
-        }
-        return shots;
-    });
+function getShots(weapon) {
+    var shots = [];
+    for (var i = 0; i < weapon.shots; i++) {
+        shots.push({
+            weapon: weapon
+        });
+    }
+    return shots;
 }
 function rollToHit(modifier) {
     var dice = roll();
@@ -239,29 +107,36 @@ function rollToDamage(pen, damageValue) {
 function roll() {
     return Math.floor(Math.random() * 6) + 1;
 }
-function getToHitModifiers(rangeModifier) {
-    return rangeModifier + selections.cover + selections.range + selections.down;
+function getToHitModifiers(weapon, target) {
+    var coverLookup = {
+        n: 0,
+        s: -1,
+        h: -2
+    };
+    var rangeLookup = {
+        c: 0,
+        s: -1,
+        l: -2
+    };
+    return coverLookup[target.cover]
+        + rangeLookup[weapon.modifiers.range]
+        + (weapon.modifiers.moved ? -1 : 0)
+        + (target.down ? -2 : 0);
 }
 function attack() {
-    var unit = selections.unit;
-    var toHitModifiers = getToHitModifiers(0);
-    var damageValue = selections.target;
-    var result = shoot(unit.models, toHitModifiers, damageValue);
-    document
-        .querySelector('.results')
-        .insertAdjacentHTML("beforeend", "<p>\n        <div class=\"title\">\n          " + unit.name + " shoots!\n        </div>\n        <div class=\"rolls\">\n        " + result
-        .map(function (shot) {
-        return "<span class=\"" + (shot.hit.success ? 'success' : 'failure') + "\">" + shot.hit.roll + "</span>";
-    }).join('') + " (hit rolls + hit modifiers)<br>\n\n        " + result
-        .map(function (shot) {
-        return "<span class=\"" + ((shot.damage && shot.damage.success) ? 'success' : 'failure') + "\">\n                " + (shot.damage ? (shot.damage.crit ? 'E' : shot.damage.roll) : '') + "\n              </span>";
-    }).join('') + " (damage rolls + pen modifiers)\n        </div>\n        <div>\n          Hits: <b>" + result.filter(function (shot) { return shot.hit.success; }).length + "</b>  |  Casualties: <b>" + result.filter(function (shot) { return shot.damage && shot.damage.success; }).length + "</b>\n        </div>\n      </p>");
+    var result = shoot(selectedWeapons, target);
 }
 document.querySelector('#addWeapon select').innerHTML =
     weapons
         .map(function (weapon, index) {
         return "<option value=\"" + index + "\">" + weapon.name + "</option>";
     }).join('');
+function populateModifiersPanel(weapons) {
+    document.querySelector('.modifiers .weapons').innerHTML = "\n    " + weapons.map(function (weapon, index) {
+        return "<div data-index=\"" + index + "\">\n        " + weapon.name + " :\n        <input type=\"radio\" id=\"close\" value=\"c\" name=\"" + index + "\">\n        <label for=\"close\">close</label>\n    \n        <input type=\"radio\" id=\"short\" value=\"s\" name=\"" + index + "\" checked>\n        <label for=\"short\">short</label>\n    \n        <input type=\"radio\" id=\"long\" value=\"l\" name=\"" + index + "\">\n        <label for=\"long\">long</label>\n        \n        " + (weapon.name === 'Anti-tank Rifle' || weapon.name === 'LMG' ?
+            "<input type=\"checkbox\" id=\"missing\" name=\"" + index + "\" value=\"nl\">\n          <label for=\"loader\">no loader</label>" : '') + "\n      </div>";
+    }).join('') + "\n  ";
+}
 var formWeapons = document.querySelector('#addWeapon');
 formWeapons.addEventListener('submit', function (event) {
     event.preventDefault();
@@ -277,8 +152,9 @@ formWeapons.addEventListener('submit', function (event) {
     }
     document.querySelector('.selection').insertAdjacentHTML('afterbegin', "\n    <div>" + formdata.get('amount') + " " + weapons[Number(formdata.get('type'))].name + "</div>\n  ");
 });
-var weaponsSubmit = document.querySelector('.selection input');
-weaponsSubmit.addEventListener('click', function () {
+document
+    .querySelector('.selection input')
+    .addEventListener('click', function () {
     selectedWeapons.sort(function (a, b) {
         var comparison = 0;
         if (a.name > b.name) {
@@ -289,37 +165,30 @@ weaponsSubmit.addEventListener('click', function () {
         }
         return comparison;
     });
-    document.querySelector('.modifiers .weapons').innerHTML = "\n    " + selectedWeapons.map(function (weapon, index) {
-        return "<div data-index=\"" + index + "\">\n        " + weapon.name + " :\n        <input type=\"radio\" id=\"close\" value=\"c\" name=\"" + index + "\">\n        <label for=\"close\">close</label>\n    \n        <input type=\"radio\" id=\"short\" value=\"s\" name=\"" + index + "\" checked>\n        <label for=\"short\">short</label>\n    \n        <input type=\"radio\" id=\"long\" value=\"l\" name=\"" + index + "\">\n        <label for=\"long\">long</label>\n        \n        " + (weapon.name === 'Anti-tank Rifle' || weapon.name === 'LMG' ?
-            '<input type="checkbox" id="missing" name="loader" value="-1">' +
-                '<label for="loader">no loader</label>' : '') + "\n      </div>";
-    }).join('') + "\n  ";
+    populateModifiersPanel(selectedWeapons);
 });
-document.querySelector('.modifiers .weapons').addEventListener('change', function (event) {
-    console.log(event.target);
+document
+    .querySelector('.modifiers .weapons')
+    .addEventListener('change', function (event) {
     var targetEl = event.target;
-    selectedWeapons[parseInt(targetEl.name)].modifiers.range = targetEl.value;
-    console.log(selectedWeapons);
+    var value = targetEl.value;
+    value === 's' || value === 'l' || value === 'c' ?
+        selectedWeapons[parseInt(targetEl.name)].modifiers.range = targetEl.value :
+        value === 'nl' ?
+            selectedWeapons[parseInt(targetEl.name)].modifiers.loader = true : void 0;
 });
-var formUnits = document.querySelector('.units form');
-formUnits.addEventListener('change', function (event) {
-    var index = Number(event.target.value);
-    selections.unit = armies[0].units[index];
+document
+    .querySelector('form.cover')
+    .addEventListener('change', function (event) {
+    target.cover = event.target.value;
 });
-var formRange = document.querySelector('form.range');
-formRange.addEventListener('change', function (event) {
-    selections.range = parseInt(event.target.value);
-});
-var formCover = document.querySelector('form.cover');
-formCover.addEventListener('change', function (event) {
-    selections.cover = Number(event.target.value);
-});
-var formDamageValue = document.querySelector('form.damageValue');
-formDamageValue.addEventListener('change', function (event) {
-    selections.target = parseInt(event.target.value);
+document
+    .querySelector('form.damageValue')
+    .addEventListener('change', function (event) {
+    target.damageValue = parseInt(event.target.value);
 });
 var checkboxDown = document.querySelector('input[id="down"]');
 checkboxDown.addEventListener('change', function () {
-    selections.down = checkboxDown.checked ? -2 : 0;
+    target.down = checkboxDown.checked ? true : false;
 });
 //# sourceMappingURL=engine.js.map

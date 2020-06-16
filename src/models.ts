@@ -6,39 +6,16 @@ export interface Weapon {
   pen: number;
 }
 
-export interface ShootingWeapon extends Weapon {
-  modifiers?: {
-    range: 'c' | 's' | 'l';
+export interface WeaponShooting extends Weapon {
+  modifiers: {
+    range: 'c' | 's' | 'l'; // close | short | long
     moved: boolean;
     loader: boolean;
   }
 }
 
-export interface Model {
-  weapon: Weapon,
-  weapon2?: Weapon,
-  crewman?: boolean;
-}
-
-export interface Unit {
-  name: string;
-  models: Array<Model>;
-  toHit: number;
-  damageValue: number;
-  cost: number;
-}
-
-export interface Army {
-  name: string;
-  units: Unit[]
-}
-
-export interface Selections {
-  unit: Unit | null;
-  range: number;
-  cover: number;
-  target: number;
-  down: number;
+export interface WeaponResult extends WeaponShooting {
+  shotsResult: Score[]
 }
 
 export interface Score {
@@ -47,8 +24,14 @@ export interface Score {
   success: boolean;
   crit: boolean;
 }
+
 export interface Shot {
-  weapon: Weapon;
   hit?: Score;
   damage?: Score;
+}
+
+export interface Target {
+  cover: 'n' | 's' | 'h'; // none | soft | hard
+  damageValue: number;
+  down: boolean;
 }
