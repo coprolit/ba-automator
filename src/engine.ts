@@ -62,15 +62,26 @@ const target: Target = {
 }
 
 // Combat utility methods:
+
 function shoot(weapons: WeaponShooting[], target: Target)/*:  WeaponResult[] */: any {
-  // Resolve each shot:
+  // Resolve the result of each shot of every firering weapon:
   return weapons
-    // resolve hit rolls:
-    .map(weapon => {
-      // resolve hit rolls:
+    // make hit rolls for each shot of each weapon:
+    .map((weapon: WeaponShooting) => {
       const shots: Shot[] = getShots(weapon);
       const modifier = getToHitModifiers(weapon, target);
-      console.log(weapon)
+
+      return {
+        ...weapon,
+        shotsResult: shots.map(() => {
+          return {
+            hit: rollToHit(modifier)
+          }
+        })
+      }
+    })
+    .map((weapon: WeaponResult) => {
+      // resolve damage rolls for succesful hits:
     })
   /* const shots: Shot[] =
     // map over to each shot:
@@ -97,9 +108,8 @@ function shoot(weapons: WeaponShooting[], target: Target)/*:  WeaponResult[] */:
 function getShots(weapon: WeaponShooting): Shot[] {
   const shots = [];
   for(let i = 0; i < weapon.shots; i++) {
-    shots.push({
-      weapon: weapon
-    });
+    // create shot:
+    shots.push({});
   }
   return shots;
 }

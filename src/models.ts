@@ -1,3 +1,10 @@
+// Target unit:
+ export interface Target {
+  cover: 'n' | 's' | 'h'; // none | soft | hard
+  damageValue: number;
+  down: boolean;
+}
+
 // Weapon types:
 export interface Weapon {
   name: string;
@@ -15,14 +22,7 @@ export interface WeaponShooting extends Weapon {
 }
 
 export interface WeaponResult extends WeaponShooting {
-  shotsResult: Score[]
-}
-
-export interface Score {
-  roll: number|string;
-  modifier: number;
-  success: boolean;
-  crit: boolean;
+  shotsResult: Shot[]
 }
 
 export interface Shot {
@@ -30,8 +30,9 @@ export interface Shot {
   damage?: Score;
 }
 
-export interface Target {
-  cover: 'n' | 's' | 'h'; // none | soft | hard
-  damageValue: number;
-  down: boolean;
+export interface Score {
+  roll: number|string;
+  modifier: number;
+  success: boolean;
+  crit: boolean;
 }
