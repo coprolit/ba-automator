@@ -63,7 +63,7 @@ const target: Target = {
 
 // Combat utility methods:
 
-function shoot(weapons: WeaponShooting[], target: Target)/*:  WeaponResult[] */: any {
+function shoot(weapons: WeaponShooting[], target: Target): WeaponResult[] {
   // Resolve the result of each shot of every firering weapon:
   return weapons
     // make hit rolls for each shot of each weapon:
@@ -73,36 +73,30 @@ function shoot(weapons: WeaponShooting[], target: Target)/*:  WeaponResult[] */:
 
       return {
         ...weapon,
+        // resolve and add hit results for each shot:
         shotsResult: shots.map(() => {
           return {
             hit: rollToHit(modifier)
           }
         })
-      }
+      };
     })
     .map((weapon: WeaponResult) => {
-      // resolve damage rolls for succesful hits:
-    })
-  /* const shots: Shot[] =
-    // map over to each shot:
-    getShots(weapons)
-    // resolve hit rolls:
-    .map((shot: Shot) => {
-      const modifier = getToHitModifiers(shot, target)
-      return {
-       ...shot,
-       hit: rollToHit(modifier)
-      } 
-    })
-    // resolve damage rolls for succesful hits:
-    .map((shot: Shot) => {
-      return {
-        ...shot,
-        damage: shot.hit.success ? rollToDamage(shot.weapon.pen, target.damageValue) : null
-      }
+      weapon.shotsResult = weapon.shotsResult.map((shot: Shot) => {
+        // for each hit
+        if (shot.hit.success) {
+          return {
+            ...shot,
+            // resolve and add damage results:
+            damage: rollToDamage(weapon.pen, target.damageValue)
+          }
+        } else {
+          return shot;
+        }
+      });
+
+      return weapon;
     });
-  
-  return shots; */
 }
 
 function getShots(weapon: WeaponShooting): Shot[] {
@@ -169,9 +163,9 @@ function getToHitModifiers(weapon: WeaponShooting, target: Target) {
     h: -2, // hard
   }
   const rangeLookup = {
-    c: 0, // close
-    s: -1, // short
-    l: -2, // long
+    c: +1, // close
+    s: 0, // short
+    l: -1, // long
   }
 
   return coverLookup[target.cover]
@@ -192,7 +186,7 @@ function attack() {
   
   // const toHitModifiers = getToHitModifiers(selectedWeapons, target);
   const result: WeaponResult[] = shoot(selectedWeapons, target);
-  
+  console.log(result)
   // displayShootingResult(result);
 }
 

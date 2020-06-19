@@ -71,15 +71,28 @@ function shoot(weapons, target) {
         .map(function (weapon) {
         var shots = getShots(weapon);
         var modifier = getToHitModifiers(weapon, target);
-        console.log(weapon);
+        return __assign(__assign({}, weapon), { shotsResult: shots.map(function () {
+                return {
+                    hit: rollToHit(modifier)
+                };
+            }) });
+    })
+        .map(function (weapon) {
+        weapon.shotsResult = weapon.shotsResult.map(function (shot) {
+            if (shot.hit.success) {
+                return __assign(__assign({}, shot), { damage: rollToDamage(weapon.pen, target.damageValue) });
+            }
+            else {
+                return shot;
+            }
+        });
+        return weapon;
     });
 }
 function getShots(weapon) {
     var shots = [];
     for (var i = 0; i < weapon.shots; i++) {
-        shots.push({
-            weapon: weapon
-        });
+        shots.push({});
     }
     return shots;
 }
@@ -114,9 +127,9 @@ function getToHitModifiers(weapon, target) {
         h: -2
     };
     var rangeLookup = {
-        c: 0,
-        s: -1,
-        l: -2
+        c: +1,
+        s: 0,
+        l: -1
     };
     return coverLookup[target.cover]
         + rangeLookup[weapon.modifiers.range]
@@ -125,6 +138,7 @@ function getToHitModifiers(weapon, target) {
 }
 function attack() {
     var result = shoot(selectedWeapons, target);
+    console.log(result);
 }
 document.querySelector('#addWeapon select').innerHTML =
     weapons
