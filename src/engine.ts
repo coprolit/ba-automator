@@ -55,6 +55,7 @@ const weapons: Weapon[] = [
 
 // Dynamic state:
 const selectedWeapons: WeaponShooting[] = [];
+
 const target: Target = {
   cover: 'n',
   damageValue: 4,
@@ -69,7 +70,7 @@ function shoot(weapons: WeaponShooting[], target: Target): WeaponResult[] {
     // make hit rolls for each shot of each weapon:
     .map((weapon: WeaponShooting) => {
       const shots: Shot[] = getShots(weapon);
-      const modifier = getToHitModifiers(weapon, target);
+      const modifier = toHitModifiers(weapon, target);
 
       return {
         ...weapon,
@@ -109,26 +110,22 @@ function getShots(weapon: WeaponShooting): Shot[] {
 }
 
 function rollToHit(modifier: number): Score {
-  // Roll 1d6 + summed to hit modifiers per shot.
+  // Roll 1d6 + to hit modifiers per shot.
   
+  // Result > 2 = successful hit.
   // Roll of a 1 is always a failure.
   
   // If modifier is more than -3 (nigh impossible shot),
   // need to roll a 6 followed by a 6.
-
-  // Result > 2 = successful hit.
 
   const dice: number = roll();
   
   // If to hit modifier is more severe than -3 = nigh impossible shot.
   // Need to roll a 6 followed by a 6 to succeed:
   const imposSuccess = modifier < -3 && dice === 6 && roll() === 6;
-
-  // Result is either a failure, the dice roll (2-6), or a nigh impossible success
-  let result = dice === 1 ? 'F' : (imposSuccess ? '∞' : dice);
   
   return {
-    roll: result,
+    roll: dice,
     modifier: modifier,
     success: dice !== 1 && (imposSuccess || dice + modifier > 2),
     crit: imposSuccess
@@ -137,16 +134,19 @@ function rollToHit(modifier: number): Score {
 
 function rollToDamage(pen: number, damageValue: number): Score {
   // Roll 1d6 + Pen value for each hit.
+
   // Result >= Damage value  = damage
   // An unmodified roll of 1 always fails to damage.
-  const result = roll();
-  let total = result === 1 ? 'F' : result + pen;
+
+  // An unmodified roll of 6, followed by a 6 = the shot scores exceptional damage.
+
+  const dice = roll();
   
   return {
-    roll: total,
+    roll: dice,
     modifier: pen,
-    success: result !== 1 && result + pen >= damageValue,
-    crit: result === 6 && roll() === 6
+    success: dice !== 1 && dice + pen >= damageValue,
+    crit: dice === 6 && roll() === 6
   };
 }
 
@@ -155,7 +155,7 @@ function roll(): number {
   return Math.floor(Math.random() * 6) + 1;
 }
 
-function getToHitModifiers(weapon: WeaponShooting, target: Target) {
+function toHitModifiers(weapon: WeaponShooting, target: Target): number {
 
   const coverLookup = {
     n: 0, // none
@@ -174,54 +174,84 @@ function getToHitModifiers(weapon: WeaponShooting, target: Target) {
     + (target.down ? -2 : 0);
 }
 
+function hits(weaponsResult: WeaponResult[]): number {
+  // From total shots, reduce to successes and count.
+  return weaponsResult
+    // Reduce/flatten to hitting shots:
+    .flatMap((weaponResult: WeaponResult) => 
+      // filter out non-successes:
+      weaponResult.shotsResult.filter(result => result.hit?.success)
+    )
+    // get count:
+    .length;
+}
+
+function casualties(weaponsResult: WeaponResult[]): number {
+  // From total shots, reduce to successes and count.
+  return weaponsResult
+    // Reduce/flatten to damaging shots:
+    .flatMap((weaponResult: WeaponResult) => 
+      // filter out non-successes:
+      weaponResult.shotsResult.filter(result => result.damage?.success)
+    )
+    // get count:
+    .length;
+}
+
+function crits(weaponsResult: WeaponResult[]): number {
+  // From total shots, reduce to successes and count.
+  return weaponsResult
+    // Reduce/flatten to damaging shots:
+    .flatMap((weaponResult: WeaponResult) => 
+      // filter out non-successes:
+      weaponResult.shotsResult.filter(result => result.damage?.crit)
+    )
+    // get count:
+    .length;
+}
+
 // Simulator
 function attack() {
-  // Collect shooting weapons, store selected to hit modifiers:
-  /* const weaponsElements = [].slice.call(document.querySelector('.modifiers .weapons').children);
-  weaponsElements.forEach((element: HTMLHtmlElement) => {
-    const dataAttrMap = element.dataset;
-    selectedWeapons[parseInt(dataAttrMap.index)].range = 
-    console.log(dataAttrMap)
-  }) */
-  
-  // const toHitModifiers = getToHitModifiers(selectedWeapons, target);
   const result: WeaponResult[] = shoot(selectedWeapons, target);
   console.log(result)
-  // displayShootingResult(result);
+  displayShootingResult(result, this.target);
 }
 
 // UI:
 
 // display shooting result:
-/* function displayShootingResult(result: WeaponResult[]) {
+function displayShootingResult(weapons: WeaponResult[], target: Target) {
   document
     .querySelector('.results')
     .insertAdjacentHTML("beforeend",
-      `<p>
+      `<div class="panel">
         <div class="title">
           Unit shoots!
         </div>
-        <div class="rolls">
-        ${result
-          .map(shot => {
-            return `<span class="${shot.hit.success ? 'success' : 'failure'}">${shot.hit.roll}</span>`
-          }).join('')
-        } (hit rolls + hit modifiers)<br>
+        
+        ${weapons.map(weapon => {
+          const toHitModifier = toHitModifiers(weapon, target);
+          return `<div class="delimiter">
+            ${weapon.name}
+            ${weapon.shotsResult.map((shot: Shot) => {
+              return `<div class="shot">
+                <span class="${shot.hit.success ? 'success' : 'failure'}">${shot.hit.crit ? '∞' : shot.hit.roll}</span>
+                <span class="panel-dark">${toHitModifier}</span>
+                ${shot.hit.success ?
+                  `-> <span class="${shot.damage.success ? 'success' : 'failure'}">${shot.damage.crit ? 'E' : shot.damage.roll} </span>
+                  <span class="panel-dark">${shot.damage.modifier}</span>` : ''}
+              </div>`;
+            }).join('')}
+          </div>`;
+        }).join('')}
 
-        ${result
-          .map(shot => {
-            return `<span class="${(shot.damage && shot.damage.success) ? 'success' : 'failure'}">
-                ${shot.damage ? (shot.damage.crit ? 'E' : shot.damage.roll) : ''}
-              </span>`
-          }).join('')
-        } (damage rolls + pen modifiers)
+        <div class="panel">
+          Hits: ${hits(weapons)} | Casualties: ${casualties(weapons)} | Exceptional damage: ${crits(weapons)}
         </div>
-        <div>
-          Hits: <b>${result.filter(shot => shot.hit.success).length}</b>  |  Casualties: <b>${result.filter(shot => shot.damage && shot.damage.success).length}</b>
-        </div>
-      </p>`
-     );
-} */
+      
+      </div>`
+    );
+}
 
 // populate weapons selector:
 document.querySelector('#addWeapon select').innerHTML =

@@ -70,7 +70,7 @@ function shoot(weapons, target) {
     return weapons
         .map(function (weapon) {
         var shots = getShots(weapon);
-        var modifier = getToHitModifiers(weapon, target);
+        var modifier = toHitModifiers(weapon, target);
         return __assign(__assign({}, weapon), { shotsResult: shots.map(function () {
                 return {
                     hit: rollToHit(modifier)
@@ -99,28 +99,26 @@ function getShots(weapon) {
 function rollToHit(modifier) {
     var dice = roll();
     var imposSuccess = modifier < -3 && dice === 6 && roll() === 6;
-    var result = dice === 1 ? 'F' : (imposSuccess ? '∞' : dice);
     return {
-        roll: result,
+        roll: dice,
         modifier: modifier,
         success: dice !== 1 && (imposSuccess || dice + modifier > 2),
         crit: imposSuccess
     };
 }
 function rollToDamage(pen, damageValue) {
-    var result = roll();
-    var total = result === 1 ? 'F' : result + pen;
+    var dice = roll();
     return {
-        roll: total,
+        roll: dice,
         modifier: pen,
-        success: result !== 1 && result + pen >= damageValue,
-        crit: result === 6 && roll() === 6
+        success: dice !== 1 && dice + pen >= damageValue,
+        crit: dice === 6 && roll() === 6
     };
 }
 function roll() {
     return Math.floor(Math.random() * 6) + 1;
 }
-function getToHitModifiers(weapon, target) {
+function toHitModifiers(weapon, target) {
     var coverLookup = {
         n: 0,
         s: -1,
@@ -136,9 +134,42 @@ function getToHitModifiers(weapon, target) {
         + (weapon.modifiers.moved ? -1 : 0)
         + (target.down ? -2 : 0);
 }
+function hits(weaponsResult) {
+    return weaponsResult
+        .flatMap(function (weaponResult) {
+        return weaponResult.shotsResult.filter(function (result) { var _a; return (_a = result.hit) === null || _a === void 0 ? void 0 : _a.success; });
+    })
+        .length;
+}
+function casualties(weaponsResult) {
+    return weaponsResult
+        .flatMap(function (weaponResult) {
+        return weaponResult.shotsResult.filter(function (result) { var _a; return (_a = result.damage) === null || _a === void 0 ? void 0 : _a.success; });
+    })
+        .length;
+}
+function crits(weaponsResult) {
+    return weaponsResult
+        .flatMap(function (weaponResult) {
+        return weaponResult.shotsResult.filter(function (result) { var _a; return (_a = result.damage) === null || _a === void 0 ? void 0 : _a.crit; });
+    })
+        .length;
+}
 function attack() {
     var result = shoot(selectedWeapons, target);
     console.log(result);
+    displayShootingResult(result, this.target);
+}
+function displayShootingResult(weapons, target) {
+    document
+        .querySelector('.results')
+        .insertAdjacentHTML("beforeend", "<div class=\"panel\">\n        <div class=\"title\">\n          Unit shoots!\n        </div>\n        \n        " + weapons.map(function (weapon) {
+        var toHitModifier = toHitModifiers(weapon, target);
+        return "<div class=\"delimiter\">\n            " + weapon.name + "\n            " + weapon.shotsResult.map(function (shot) {
+            return "<div class=\"shot\">\n                <span class=\"" + (shot.hit.success ? 'success' : 'failure') + "\">" + (shot.hit.crit ? '∞' : shot.hit.roll) + "</span>\n                <span class=\"panel-dark\">" + toHitModifier + "</span>\n                " + (shot.hit.success ?
+                "-> <span class=\"" + (shot.damage.success ? 'success' : 'failure') + "\">" + (shot.damage.crit ? 'E' : shot.damage.roll) + " </span>\n                  <span class=\"panel-dark\">" + shot.damage.modifier + "</span>" : '') + "\n              </div>";
+        }).join('') + "\n          </div>";
+    }).join('') + "\n\n        <div class=\"panel\">\n          Hits: " + hits(weapons) + " | Casualties: " + casualties(weapons) + " | Exceptional damage: " + crits(weapons) + "\n        </div>\n      \n      </div>");
 }
 document.querySelector('#addWeapon select').innerHTML =
     weapons

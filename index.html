@@ -12,7 +12,7 @@
         <input name="amount" type="number" min="1" max="20" value="1">
         <input type="submit" value="Add">
       </form>
-      <div class="selection box">
+      <div class="selection panel">
           <input type="submit" value="Submit">
       </div>
     </div>
@@ -73,6 +73,10 @@
       <div><span>∞</span> = nigh impossible shot (requires 6, followed by an additional 6 on <b>to hit</b> roll)</div>
       <div><span>E</span> = exceptional damage (any <b>to damage</b> roll of 6, followed by an additional 6)</div>
       <div><span>F</span> = failure (regardless of any modifiers, a roll of a <b>1</b> is always a failure)</div>
+      <div>
+        3 <span class="panel-dark">-1</span> -> 3 <span class="panel-dark">2</span> =
+        <b>to hit roll</b> <span class="panel-dark">to hit modifier</span> <b>-> to damage roll</b> <span class="panel-dark">penetration value</span>
+      </div>
     </div>
     
     <div class='results'></div>

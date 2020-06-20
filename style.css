@@ -1,22 +1,18 @@
-h3 {
-  margin-block-start: auto;
+h3, h4 {
+  margin-block-start: 10px;
+  margin-block-end: 10px;
 }
 
 .title {
   font-weight: bold;
+  margin-block-end: 10px;
 }
 .success {
   color: green;
-  width: 20px;
-  display: inline-block;
-  text-align: center;
 }
 
 .failure {
   color: red;
-  width: 20px;
-  display: inline-block;
-  text-align: center;
 }
 
 .italic {
@@ -30,9 +26,25 @@ h3 {
   writing-mode: horizontal-tb;
 }
 
+.delimiter {
+  writing-mode: horizontal-tb;
+  margin-block-start: 10px;
+}
+
+.panel-dark {
+  margin-left: 2px;
+  padding: 0 2px;
+  background-color: rgb(231, 230, 230);
+}
+
 .box {
   padding: 10px;
   background-color: lightgrey;
+}
+
+.shot {
+  margin-left: 1rem;
+  font-size: small;
 }
 
 .probabilities {
@@ -46,9 +58,6 @@ h3 {
 .legend {
   margin-top: 10px;
   padding: 10px;
-  background-color: LightGray;
+  background-color: rgb(247, 240, 210);
   font-size: small;
-}
-.legend span {
-  font-size: large;
 }

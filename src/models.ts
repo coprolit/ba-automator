@@ -25,6 +25,10 @@ export interface WeaponResult extends WeaponShooting {
   shotsResult: Shot[]
 }
 
+export interface WeaponHistory {
+  
+}
+
 export interface Shot {
   hit?: Score;
   damage?: Score;
