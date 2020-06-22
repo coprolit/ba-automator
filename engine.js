@@ -66,6 +66,7 @@ var target = {
     damageValue: 4,
     down: false
 };
+var attackHistory = [];
 function shoot(weapons, target) {
     return weapons
         .map(function (weapon) {
@@ -156,9 +157,10 @@ function crits(weaponsResult) {
         .length;
 }
 function attack() {
-    var result = shoot(selectedWeapons, target);
-    console.log(result);
-    displayShootingResult(result, this.target);
+    var results = shoot(selectedWeapons, target);
+    attackHistory.push(results);
+    displayShootingResult(results, this.target);
+    updateStats(attackHistory);
 }
 function displayShootingResult(weapons, target) {
     document
@@ -170,6 +172,16 @@ function displayShootingResult(weapons, target) {
                 "-> <span class=\"" + (shot.damage.success ? 'success' : 'failure') + "\">" + (shot.damage.crit ? 'E' : shot.damage.roll) + " </span>\n                  <span class=\"panel-dark\">" + shot.damage.modifier + "</span>" : '') + "\n              </div>";
         }).join('') + "\n          </div>";
     }).join('') + "\n\n        <div class=\"panel\">\n          Hits: " + hits(weapons) + " | Casualties: " + casualties(weapons) + " | Exceptional damage: " + crits(weapons) + "\n        </div>\n      \n      </div>");
+}
+function updateStats(history) {
+    var cols = history.length;
+    var row = 0;
+    var hitsTotal = 0;
+    for (var i = 0; i < cols; i++) {
+        var hits_1 = history[i][row].shotsResult.filter(function (shot) { return shot.hit.success; }).length;
+        hitsTotal = hitsTotal + hits_1;
+    }
+    console.log("Hit rate " + hitsTotal / history.length * 100 + "%");
 }
 document.querySelector('#addWeapon select').innerHTML =
     weapons

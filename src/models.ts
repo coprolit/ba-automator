@@ -13,20 +13,21 @@ export interface Weapon {
   pen: number;
 }
 
+export interface Modifiers {
+  range: 'c' | 's' | 'l'; // close | short | long
+  moved: boolean; // TODO instead extracted from order dice action?
+  loader: boolean;
+}
 export interface WeaponShooting extends Weapon {
-  modifiers: {
-    range: 'c' | 's' | 'l'; // close | short | long
-    moved: boolean;
-    loader: boolean;
-  }
+  modifiers: Modifiers;
 }
 
 export interface WeaponResult extends WeaponShooting {
-  shotsResult: Shot[]
+  shotsResult: Shot[];
 }
 
-export interface WeaponHistory {
-  
+export interface Action {
+  weapons: WeaponResult[];
 }
 
 export interface Shot {

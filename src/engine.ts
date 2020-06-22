@@ -1,4 +1,4 @@
-import {Score, WeaponShooting, Shot, Target, Weapon, WeaponResult} from './models';
+import {Score, Shot, Target, Weapon, WeaponResult, WeaponShooting} from './models';
 
 const rifle = {
   name: "Rifle",
@@ -61,6 +61,8 @@ const target: Target = {
   damageValue: 4,
   down: false
 }
+
+const attackHistory: WeaponResult[][] = [];
 
 // Combat utility methods:
 
@@ -212,9 +214,12 @@ function crits(weaponsResult: WeaponResult[]): number {
 
 // Simulator
 function attack() {
-  const result: WeaponResult[] = shoot(selectedWeapons, target);
-  console.log(result)
-  displayShootingResult(result, this.target);
+  const results: WeaponResult[] = shoot(selectedWeapons, target);
+  
+  attackHistory.push(results);
+  
+  displayShootingResult(results, this.target);
+  updateStats(attackHistory);
 }
 
 // UI:
@@ -251,6 +256,41 @@ function displayShootingResult(weapons: WeaponResult[], target: Target) {
       
       </div>`
     );
+}
+
+function updateStats(history: WeaponResult[][]) {
+  const cols = history.length;
+  let row = 0;
+  let hitsTotal = 0;
+
+  for (let i = 0; i < cols; i++) {
+    const hits = history[i][row].shotsResult.filter(shot => shot.hit.success).length;
+
+    hitsTotal = hitsTotal + hits;
+  }
+
+  console.log(`Hit rate ${hitsTotal / history.length * 100}%`);
+  
+  /* document.querySelector('.history').innerHTML = `
+    ${history.map((results: WeaponResult[]) => 
+      `<div">
+        ${weapon.name} :
+        <input type="radio" id="close" value="c" name="${index}">
+        <label for="close">close</label>
+    
+        <input type="radio" id="short" value="s" name="${index}" checked>
+        <label for="short">short</label>
+    
+        <input type="radio" id="long" value="l" name="${index}">
+        <label for="long">long</label>
+        
+        ${weapon.name === 'Anti-tank Rifle' || weapon.name === 'LMG' ?
+          `<input type="checkbox" id="missing" name="${index}" value="nl">
+          <label for="loader">no loader</label>` : ''
+        }
+      </div>`
+    ).join('')}
+  `; */
 }
 
 // populate weapons selector:
