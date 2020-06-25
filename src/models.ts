@@ -5,6 +5,10 @@
   down: boolean;
 }
 
+export interface Unit {
+  weapons: WeaponResult[];
+}
+
 // Weapon types:
 export interface Weapon {
   name: string;

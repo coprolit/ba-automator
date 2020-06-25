@@ -67,11 +67,26 @@ var target = {
     down: false
 };
 var attackHistory = [];
+function toHitProbability(shots, modifier) {
+    var probability = modifier < -3 ?
+        1 / 6 * 1 / 6 :
+        (4 + modifier) / 6;
+    return shots * probability;
+}
+function toDamageProbability(toHit, pen, damageValue) {
+    console.log(toHit);
+    console.log(toHit * (7 - damageValue - pen) / 6);
+    return toHit * (7 - damageValue - pen) / 6;
+}
+function getProbabilities(weapons) {
+}
+function updateProbabilities() {
+}
 function shoot(weapons, target) {
     return weapons
         .map(function (weapon) {
         var shots = getShots(weapon);
-        var modifier = toHitModifiers(weapon, target);
+        var modifier = toHitModifier(weapon, target);
         return __assign(__assign({}, weapon), { shotsResult: shots.map(function () {
                 return {
                     hit: rollToHit(modifier)
@@ -119,7 +134,7 @@ function rollToDamage(pen, damageValue) {
 function roll() {
     return Math.floor(Math.random() * 6) + 1;
 }
-function toHitModifiers(weapon, target) {
+function toHitModifier(weapon, target) {
     var coverLookup = {
         n: 0,
         s: -1,
@@ -165,10 +180,9 @@ function attack() {
 function displayShootingResult(weapons, target) {
     document
         .querySelector('.results')
-        .insertAdjacentHTML("beforeend", "<div class=\"panel\">\n        <div class=\"title\">\n          Unit shoots!\n        </div>\n        \n        " + weapons.map(function (weapon) {
-        var toHitModifier = toHitModifiers(weapon, target);
+        .insertAdjacentHTML("beforeend", "<div class=\"panel\">\n        <div class=\"title\">\n          Unit shoots!\n        </div>\n        " + weapons.map(function (weapon) {
         return "<div class=\"delimiter\">\n            " + weapon.name + "\n            " + weapon.shotsResult.map(function (shot) {
-            return "<div class=\"shot\">\n                <span class=\"" + (shot.hit.success ? 'success' : 'failure') + "\">" + (shot.hit.crit ? '∞' : shot.hit.roll) + "</span>\n                <span class=\"panel-dark\">" + toHitModifier + "</span>\n                " + (shot.hit.success ?
+            return "<div class=\"shot\">\n                <span class=\"" + (shot.hit.success ? 'success' : 'failure') + "\">" + (shot.hit.crit ? '∞' : shot.hit.roll) + "</span>\n                <span class=\"panel-dark\">" + toHitModifier(weapon, target) + "</span>\n                " + (shot.hit.success ?
                 "-> <span class=\"" + (shot.damage.success ? 'success' : 'failure') + "\">" + (shot.damage.crit ? 'E' : shot.damage.roll) + " </span>\n                  <span class=\"panel-dark\">" + shot.damage.modifier + "</span>" : '') + "\n              </div>";
         }).join('') + "\n          </div>";
     }).join('') + "\n\n        <div class=\"panel\">\n          Hits: " + hits(weapons) + " | Casualties: " + casualties(weapons) + " | Exceptional damage: " + crits(weapons) + "\n        </div>\n      \n      </div>");
@@ -190,8 +204,10 @@ document.querySelector('#addWeapon select').innerHTML =
     }).join('');
 function populateModifiersPanel(weapons) {
     document.querySelector('.modifiers .weapons').innerHTML = "\n    " + weapons.map(function (weapon, index) {
-        return "<div data-index=\"" + index + "\">\n        " + weapon.name + " :\n        <input type=\"radio\" id=\"close\" value=\"c\" name=\"" + index + "\">\n        <label for=\"close\">close</label>\n    \n        <input type=\"radio\" id=\"short\" value=\"s\" name=\"" + index + "\" checked>\n        <label for=\"short\">short</label>\n    \n        <input type=\"radio\" id=\"long\" value=\"l\" name=\"" + index + "\">\n        <label for=\"long\">long</label>\n        \n        " + (weapon.name === 'Anti-tank Rifle' || weapon.name === 'LMG' ?
-            "<input type=\"checkbox\" id=\"missing\" name=\"" + index + "\" value=\"nl\">\n          <label for=\"loader\">no loader</label>" : '') + "\n      </div>";
+        var toHitProb = toHitProbability(weapon.shots, toHitModifier(weapon, target));
+        var toDamageProb = toDamageProbability(toHitProb, weapon.pen, target.damageValue);
+        return "<div data-index=\"" + index + "\">\n        " + weapon.name + " :\n        <input type=\"radio\" id=\"close\" value=\"c\" name=\"" + index + "\" " + (weapon.modifiers.range === 'c' ? 'checked' : '') + ">\n        <label for=\"close\">close</label>\n    \n        <input type=\"radio\" id=\"short\" value=\"s\" name=\"" + index + "\" " + (weapon.modifiers.range === 's' ? 'checked' : '') + ">\n        <label for=\"short\">short</label>\n    \n        <input type=\"radio\" id=\"long\" value=\"l\" name=\"" + index + "\" " + (weapon.modifiers.range === 'l' ? 'checked' : '') + ">\n        <label for=\"long\">long</label>\n        \n        " + (weapon.name === 'Anti-tank Rifle' || weapon.name === 'LMG' ?
+            "<input type=\"checkbox\" id=\"missing\" name=\"" + index + "\" value=\"nl\">\n          <label for=\"loader\">no loader</label>" : '') + "\n\n        <span class=\"panel-dark\">\n          tohit " + toHitProb.toFixed(2) + " |\n          to damage " + toDamageProb.toFixed(2) + "\n        </span>\n      </div>";
     }).join('') + "\n  ";
 }
 var formWeapons = document.querySelector('#addWeapon');
@@ -233,19 +249,23 @@ document
         selectedWeapons[parseInt(targetEl.name)].modifiers.range = targetEl.value :
         value === 'nl' ?
             selectedWeapons[parseInt(targetEl.name)].modifiers.loader = true : void 0;
+    populateModifiersPanel(selectedWeapons);
 });
 document
     .querySelector('form.cover')
     .addEventListener('change', function (event) {
     target.cover = event.target.value;
+    populateModifiersPanel(selectedWeapons);
 });
 document
     .querySelector('form.damageValue')
     .addEventListener('change', function (event) {
     target.damageValue = parseInt(event.target.value);
+    populateModifiersPanel(selectedWeapons);
 });
 var checkboxDown = document.querySelector('input[id="down"]');
 checkboxDown.addEventListener('change', function () {
     target.down = checkboxDown.checked ? true : false;
+    populateModifiersPanel(selectedWeapons);
 });
 //# sourceMappingURL=engine.js.map
