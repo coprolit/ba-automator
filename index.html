@@ -3,8 +3,13 @@
   <head>
     <title>Bolt Action Automator</title>
     <link href="style.css" rel="stylesheet">
+    <link rel="stylesheet"
+          href="https://fonts.googleapis.com/css?family=Roboto">
   </head>
   <body>
+    <header class="panel dark">
+      <h1>Bolt Action Probabilities</h1>
+    </header>
     <div class="panel">
       <h3>Add weapons to shoot</h3>
       <form id="addWeapon">
@@ -12,9 +17,9 @@
         <input name="amount" type="number" min="1" max="20" value="1">
         <input type="submit" value="Add">
       </form>
-      <div class="selection panel">
-          <input type="submit" value="Submit">
-      </div>
+      <p class="selection">
+        <input type="submit" value="Submit">
+      </p>
     </div>
     
     <!-- <div class="units panel">

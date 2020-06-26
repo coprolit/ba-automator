@@ -1,3 +1,8 @@
+body {
+  margin: 0;
+  font-family: 'Roboto', serif;
+}
+
 h3, h4 {
   margin-block-start: 10px;
   margin-block-end: 10px;
@@ -10,7 +15,6 @@ h3, h4 {
 .success {
   color: green;
 }
-
 .failure {
   color: red;
 }
@@ -22,19 +26,16 @@ h3, h4 {
 .panel {
   padding: 10px;
   border: 1px solid lightgrey;
-  margin-block-start: 10px; 
+  /* margin-block-start: 10px;  */
   writing-mode: horizontal-tb;
+}
+.panel.dark {
+  background-color: rgb(231, 230, 230);
 }
 
 .delimiter {
   writing-mode: horizontal-tb;
   margin-block-start: 10px;
-}
-
-.panel-dark {
-  margin-left: 2px;
-  padding: 0 2px;
-  background-color: rgb(231, 230, 230);
 }
 
 .box {
