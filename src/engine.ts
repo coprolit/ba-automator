@@ -273,10 +273,10 @@ function displayShootingResult(weapons: WeaponResult[], target: Target) {
   document
     .querySelector('.results')
     .insertAdjacentHTML("beforeend",
-      `<div class="panel">
-        <div class="title">
+      `<fieldset>
+        <legend>
           Unit shoots!
-        </div>
+        </legend>
         ${weapons.map(weapon => {
           return `<div class="delimiter">
             ${weapon.name}
@@ -292,11 +292,11 @@ function displayShootingResult(weapons: WeaponResult[], target: Target) {
           </div>`;
         }).join('')}
 
-        <div class="panel">
+        <h4>
           Hits: ${hits(weapons)} | Casualties: ${casualties(weapons)} | Exceptional damage: ${crits(weapons)}
-        </div>
+        </h4>
       
-      </div>`
+      </fieldset>`
     );
 }
 
@@ -337,10 +337,9 @@ function updateStats(history: WeaponResult[][]) {
 
 // populate weapons selector:
 document.querySelector('#addWeapon select').innerHTML =
-  weapons
-    .map((weapon, index) =>
-      `<option value="${index}">${weapon.name}</option>`
-     ).join('');
+  weapons.map((weapon, index) =>
+    `<option value="${index}">${weapon.name}</option>`
+  ).join('');
 
 function populateModifiersPanel(weapons: WeaponShooting[]) {
   // display selected weapons for modifier adjustments:
@@ -364,10 +363,10 @@ function populateModifiersPanel(weapons: WeaponShooting[]) {
           <label for="loader">no loader</label>` : ''
         }
 
-        <span class="panel-dark">
-          tohit ${toHitProb.toFixed(2)} |
-          to damage ${toDamageProb.toFixed(2)}
-        </span>
+        <span class="highlight">hit ${(toHitProb * 100).toFixed(1)}%</span> -> 
+        <span class="highlight">damage ${(toDamageProb * 100).toFixed(1)}%</span>
+
+        <input type="button" value="x" onclick="removeWeapon(this)">
       </div>`
       }).join('')}
   `;
@@ -375,7 +374,7 @@ function populateModifiersPanel(weapons: WeaponShooting[]) {
 
 // FORM HANDLERS:
 
-// Add weapon to selection:
+// Add weapon(s) to selection:
 const formWeapons: HTMLFormElement = document.querySelector('#addWeapon');
 formWeapons.addEventListener('submit', (event: Event) => {
   event.preventDefault();
@@ -396,18 +395,8 @@ formWeapons.addEventListener('submit', (event: Event) => {
     })
   }
 
-  // display in panel:
-  document.querySelector('.selection').insertAdjacentHTML('afterbegin', `
-    <div>${formdata.get('amount')} ${weapons[Number(formdata.get('type'))].name}</div>
-  `)
-});
-
-// Save selected weapons:
-document
-  .querySelector('.selection input')
-  .addEventListener('click', () => {
-    // sequence weapon types by name:
-    selectedWeapons.sort((a, b) => {
+  // sort stored weapon types by name:
+  selectedWeapons.sort((a, b) => {
     let comparison = 0;
     if (a.name > b.name) {
       comparison = 1;
@@ -416,9 +405,17 @@ document
     }
     return comparison;
   });
+
+  // display in panel:
+  populateModifiersPanel(selectedWeapons);
+});
+
+function removeWeapon(element: HTMLInputElement) {
+  // remove from store:
+  selectedWeapons.splice(Number(element.parentElement.dataset.index), 1);
   
-    populateModifiersPanel(selectedWeapons);
-  })
+  populateModifiersPanel(selectedWeapons);
+}
 
 // Store shooting modifiers:
 document

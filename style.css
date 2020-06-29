@@ -1,11 +1,21 @@
 body {
   margin: 0;
-  font-family: 'Roboto', serif;
+  font-family: 'Roboto', 'Helvetica Neue', sans-serif;
 }
 
 h3, h4 {
   margin-block-start: 10px;
   margin-block-end: 10px;
+}
+
+fieldset {
+  margin-block-end: 10px;
+  border-color: white;
+  border-width: thin;
+}
+
+form label {
+  font-weight: bold;
 }
 
 .title {
@@ -25,12 +35,16 @@ h3, h4 {
 
 .panel {
   padding: 10px;
-  border: 1px solid lightgrey;
-  /* margin-block-start: 10px;  */
-  writing-mode: horizontal-tb;
 }
 .panel.dark {
   background-color: rgb(231, 230, 230);
+}
+
+.highlight {
+  padding: 1px 3px;
+  background-color: sandybrown;
+  border-radius: 4px;
+  font-size: small;
 }
 
 .delimiter {

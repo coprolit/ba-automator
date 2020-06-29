@@ -180,12 +180,12 @@ function attack() {
 function displayShootingResult(weapons, target) {
     document
         .querySelector('.results')
-        .insertAdjacentHTML("beforeend", "<div class=\"panel\">\n        <div class=\"title\">\n          Unit shoots!\n        </div>\n        " + weapons.map(function (weapon) {
+        .insertAdjacentHTML("beforeend", "<fieldset>\n        <legend>\n          Unit shoots!\n        </legend>\n        " + weapons.map(function (weapon) {
         return "<div class=\"delimiter\">\n            " + weapon.name + "\n            " + weapon.shotsResult.map(function (shot) {
             return "<div class=\"shot\">\n                <span class=\"" + (shot.hit.success ? 'success' : 'failure') + "\">" + (shot.hit.crit ? '∞' : shot.hit.roll) + "</span>\n                <span class=\"panel-dark\">" + toHitModifier(weapon, target) + "</span>\n                " + (shot.hit.success ?
                 "-> <span class=\"" + (shot.damage.success ? 'success' : 'failure') + "\">" + (shot.damage.crit ? 'E' : shot.damage.roll) + " </span>\n                  <span class=\"panel-dark\">" + shot.damage.modifier + "</span>" : '') + "\n              </div>";
         }).join('') + "\n          </div>";
-    }).join('') + "\n\n        <div class=\"panel\">\n          Hits: " + hits(weapons) + " | Casualties: " + casualties(weapons) + " | Exceptional damage: " + crits(weapons) + "\n        </div>\n      \n      </div>");
+    }).join('') + "\n\n        <h4>\n          Hits: " + hits(weapons) + " | Casualties: " + casualties(weapons) + " | Exceptional damage: " + crits(weapons) + "\n        </h4>\n      \n      </fieldset>");
 }
 function updateStats(history) {
     var cols = history.length;
@@ -198,8 +198,7 @@ function updateStats(history) {
     console.log("Hit rate " + hitsTotal / history.length * 100 + "%");
 }
 document.querySelector('#addWeapon select').innerHTML =
-    weapons
-        .map(function (weapon, index) {
+    weapons.map(function (weapon, index) {
         return "<option value=\"" + index + "\">" + weapon.name + "</option>";
     }).join('');
 function populateModifiersPanel(weapons) {
@@ -207,7 +206,7 @@ function populateModifiersPanel(weapons) {
         var toHitProb = toHitProbability(weapon.shots, toHitModifier(weapon, target));
         var toDamageProb = toDamageProbability(toHitProb, weapon.pen, target.damageValue);
         return "<div data-index=\"" + index + "\">\n        " + weapon.name + " :\n        <input type=\"radio\" id=\"close\" value=\"c\" name=\"" + index + "\" " + (weapon.modifiers.range === 'c' ? 'checked' : '') + ">\n        <label for=\"close\">close</label>\n    \n        <input type=\"radio\" id=\"short\" value=\"s\" name=\"" + index + "\" " + (weapon.modifiers.range === 's' ? 'checked' : '') + ">\n        <label for=\"short\">short</label>\n    \n        <input type=\"radio\" id=\"long\" value=\"l\" name=\"" + index + "\" " + (weapon.modifiers.range === 'l' ? 'checked' : '') + ">\n        <label for=\"long\">long</label>\n        \n        " + (weapon.name === 'Anti-tank Rifle' || weapon.name === 'LMG' ?
-            "<input type=\"checkbox\" id=\"missing\" name=\"" + index + "\" value=\"nl\">\n          <label for=\"loader\">no loader</label>" : '') + "\n\n        <span class=\"panel-dark\">\n          tohit " + toHitProb.toFixed(2) + " |\n          to damage " + toDamageProb.toFixed(2) + "\n        </span>\n      </div>";
+            "<input type=\"checkbox\" id=\"missing\" name=\"" + index + "\" value=\"nl\">\n          <label for=\"loader\">no loader</label>" : '') + "\n\n        <span class=\"highlight\">hit " + (toHitProb * 100).toFixed(1) + "%</span> -> \n        <span class=\"highlight\">damage " + (toDamageProb * 100).toFixed(1) + "%</span>\n\n        <input type=\"button\" value=\"x\" onclick=\"removeWeapon(this)\">\n      </div>";
     }).join('') + "\n  ";
 }
 var formWeapons = document.querySelector('#addWeapon');
@@ -223,11 +222,6 @@ formWeapons.addEventListener('submit', function (event) {
                 loader: true
             } }));
     }
-    document.querySelector('.selection').insertAdjacentHTML('afterbegin', "\n    <div>" + formdata.get('amount') + " " + weapons[Number(formdata.get('type'))].name + "</div>\n  ");
-});
-document
-    .querySelector('.selection input')
-    .addEventListener('click', function () {
     selectedWeapons.sort(function (a, b) {
         var comparison = 0;
         if (a.name > b.name) {
@@ -240,6 +234,10 @@ document
     });
     populateModifiersPanel(selectedWeapons);
 });
+function removeWeapon(element) {
+    selectedWeapons.splice(Number(element.parentElement.dataset.index), 1);
+    populateModifiersPanel(selectedWeapons);
+}
 document
     .querySelector('.modifiers .weapons')
     .addEventListener('change', function (event) {
