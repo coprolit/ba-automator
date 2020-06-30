@@ -8,7 +8,7 @@ body {
   font-family: "Roboto";
   font-weight: 400;
   font-style: normal;
-  font-size: 1rem;
+  font-size: 3.5vmax;
 }
 
 header {
@@ -65,10 +65,6 @@ fieldset {
 
 .shot {
   margin-left: 1rem;
-  font-size: small;
-}
-
-.legend {
   font-size: small;
 }
 
