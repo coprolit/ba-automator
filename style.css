@@ -1,6 +1,20 @@
+:root {
+  --border: 1px solid rgba(0,0,0,.2);
+  --background-color: whitesmoke;
+}
+
 body {
   margin: 0;
-  font-family: 'Roboto', 'Helvetica Neue', sans-serif;
+  font-family: "Roboto";
+  font-weight: 400;
+  font-style: normal;
+  font-size: 1rem;
+}
+
+header {
+  border-bottom: var(--border);
+  padding: 10px;
+  background-color: var(--background-color);
 }
 
 h3, h4 {
@@ -10,17 +24,11 @@ h3, h4 {
 
 fieldset {
   margin-block-end: 10px;
-  border-color: white;
-  border-width: thin;
-}
-
-form label {
-  font-weight: bold;
+  border: var(--border);
 }
 
 .title {
   font-weight: bold;
-  margin-block-end: 10px;
 }
 .success {
   color: green;
@@ -28,33 +36,31 @@ form label {
 .failure {
   color: red;
 }
-
 .italic {
   font-style: italic;
 }
 
 .panel {
   padding: 10px;
+  margin-block-end: 10px;
 }
 .panel.dark {
-  background-color: rgb(231, 230, 230);
+  background-color: var(--background-color);
+  /* border: var(--border); */
 }
 
 .highlight {
-  padding: 1px 3px;
+  padding: 2px 5px;
   background-color: sandybrown;
   border-radius: 4px;
-  font-size: small;
+  line-height: 24px;
 }
 
 .delimiter {
   writing-mode: horizontal-tb;
   margin-block-start: 10px;
-}
-
-.box {
-  padding: 10px;
-  background-color: lightgrey;
+  margin-block-end: 10px;
+  border-bottom: var(--border);
 }
 
 .shot {
@@ -62,18 +68,7 @@ form label {
   font-size: small;
 }
 
-.probabilities {
-  padding: 10px;
-  background-color: DarkKhaki
-}
-.rolls {
-  padding: 10px;
-  background-color: GhostWhite
-}
 .legend {
-  margin-top: 10px;
-  padding: 10px;
-  background-color: rgb(247, 240, 210);
   font-size: small;
 }
 
