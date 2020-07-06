@@ -26,6 +26,20 @@ fieldset {
   margin-block-end: 10px;
   border: var(--border);
 }
+fieldset > * {
+  margin-block-start: 10px;
+}
+
+hr {
+  color: rgba(0,0,0,.2);
+}
+
+.small {
+  font-size: 1.5vmax;
+}
+.tiny {
+  font-size: 1vmax;
+}
 
 .title {
   font-weight: bold;
@@ -50,10 +64,12 @@ fieldset {
 }
 
 .highlight {
-  padding: 2px 5px;
+  padding: 1px 5px;
   background-color: sandybrown;
   border-radius: 4px;
-  line-height: 24px;
+}
+.highlight.light {
+  background-color: wheat;
 }
 
 .delimiter {
@@ -63,9 +79,23 @@ fieldset {
   border-bottom: var(--border);
 }
 
-.shot {
+.weapon {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+.weapon > * {
+  margin-left: 4px;
+  margin-right: 4px;
+}
+.weapon .space {
+  flex-grow: 1;
+}
+
+
+.roll {
   margin-left: 1rem;
-  font-size: small;
+  font-size: smaller;
 }
 
 .stats {
@@ -74,4 +104,24 @@ fieldset {
   bottom: 10px;
   box-shadow: 2px 2px 1px 1px rgba(0, 0, 0, .1);
   background-color: ghostwhite;
+}
+
+.row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  /* margin-left: 1.3vmax; */
+}
+
+.multiplier {
+  margin-right: 6px;
+}
+
+.box {
+  display: inline-block;
 }

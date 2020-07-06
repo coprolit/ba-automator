@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Bolt Action Automator</title>
+    <title>Bolt Action Probabilities</title>
     <link href="style.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
   </head>
@@ -14,7 +14,9 @@
       <form></form>
     </div> -->
     
+    <!-- Modifiers -->
     <div class="panel modifiers">
+      <!-- Target unit -->
       <fieldset>
         <legend>Target</legend>
         <form class="cover">
@@ -38,31 +40,30 @@
         
         <form class="damageValue">
           <label class="title">Damage Value</label>
-          <input type="radio" id="inex" name="gender" value="3">
+          <input type="radio" id="inex" name="dv" value="3">
           <label for="inex">inexperienced inf</label>
       
-          <input type="radio" id="reg" name="gender" value="4" checked>
+          <input type="radio" id="reg" name="dv" value="4" checked>
           <label for="reg">regular inf</label>
       
-          <input type="radio" id="vet" name="gender" value="5">
+          <input type="radio" id="vet" name="dv" value="5">
           <label for="vet">veteran inf</label>
         </form>
       </fieldset>
 
+      <!-- Attacking unit -->
       <fieldset>
         <legend>Attackers</legend>
-        <div class="panel dark">
-          <form id="addWeapon">
-            <label>Add weapons to shoot</label>
-            <select name="type"></select>
-            <input name="amount" type="number" min="1" max="20" value="1">
-            <input type="submit" value="Add">
-          </form>
-        </div>
+        <form id="addWeapon">
+          <label>Add weapons to shoot</label>
+          <select name="type"></select>
+          <input name="amount" type="number" min="1" max="20" value="1">
+          <input type="submit" value="Add">
+        </form>
         <div class="weapons"></div>
-        <div class="delimiter"></div>
         <div class="probabilities">
           <span class="title">Total</span>
+          <span class="highlight light">Pin <span class="pinning">0%</span></span>  
           <span class="highlight">Hits <span class="hits">0</span></span> &rarr; 
           <span class="highlight">Casualties <span class="casualties">0</span></span>
         </div>
@@ -71,7 +72,7 @@
       <p class="title result"></p>
     </div>
     
-    <div class="delimiter"></div>
+    <hr>
     
     <div class="panel">
       <h2>Simulator</h2>

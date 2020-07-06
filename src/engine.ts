@@ -65,7 +65,7 @@ const target: Target = {
 const attackHistory: WeaponResult[][] = [];
 
 // Probability methods:
-function toHitProbability(shots: number, modifier: number) {
+function toHitProbability(modifier: number) {
   const probability =
     // If to hit penalty is more severe than -3,
     modifier < -3 ?
@@ -74,29 +74,72 @@ function toHitProbability(shots: number, modifier: number) {
     // else base chance + modifier.
     (4 + modifier) / 6;
   
-  return shots * probability;
+  return probability;
 }
 
-function toDamageProbability(toHit: number, pen: number, damageValue: number) {
-  return toHit * (7 - damageValue - pen) / 6;
+function toMissProbability(toHitProb: number) {
+  return 1 - toHitProb;
+}
+
+function toDamageProbability(pen: number, damageValue: number) {
+  
+  const dvModLookup: any = {
+    3: +1,
+    4: 0,
+    5: -1,
+    6: -2
+  }
+
+  const factorRaw = 3 + dvModLookup[damageValue] + pen;
+  const factor = factorRaw > 5 ? 5 : factorRaw; 
+
+  return factor / 6;
+}
+
+function hitsProbability(shots: number, toHitProb: number) {
+  return shots * toHitProb;
+}
+
+function killsProbability(shots: number, toHit: number, toDamage: number) {
+  return shots * toHit * toDamage;
+}
+
+function missProbability(weapon: WeaponShooting, target: Target) {
+  const toHitProb = toHitProbability(toHitModifier(weapon, target));
+  
+  let toMissProb = 1;
+  for (let index = 0; index < weapon.shots; index++) {
+    toMissProb = toMissProb * toMissProbability(toHitProb);
+  };
+
+  return toMissProb;
 }
 
 function getProbabilities(weapons: WeaponShooting[], target: Target) {
+
+  const missProb = weapons.reduce((acc, weapon) => {
+    (1 - missProbability(weapon, target));
+    return acc * missProbability(weapon, target)
+  }, 1);
+
+  // sum up to hit probabilities:
   const hits = weapons.reduce((acc, weapon) => {
-    return acc + toHitProbability(weapon.shots, toHitModifier(weapon, target))
+    return acc + toHitProbability(toHitModifier(weapon, target))
   }, 0);
 
+  // sum up kill probabilities:
   const casualties = weapons.reduce((acc, weapon) => {
-    return acc + toDamageProbability(
-      toHitProbability(weapon.shots, toHitModifier(weapon, target)),
-      weapon.pen,
-      target.damageValue
+    return acc + killsProbability(
+      weapon.shots,
+      toHitProbability(toHitModifier(weapon, target)),
+      toDamageProbability(weapon.pen, target.damageValue)
     );
   }, 0);
   
   return {
-    hits: hits.toFixed(2),
-    casualties: casualties.toFixed(2)
+    pin: 1 - missProb,
+    hits: hits,
+    casualties: casualties
   }
 }
 
@@ -143,10 +186,13 @@ function populateModifiersPanel(weapons: WeaponShooting[]) {
   // display selected weapons for modifier adjustments:
   document.querySelector('.modifiers .weapons').innerHTML = `
     ${weapons.map((weapon, index) => {
-      const toHitProb = toHitProbability(weapon.shots, toHitModifier(weapon, target));
-      const toDamageProb = toDamageProbability(toHitProb, weapon.pen, target.damageValue);
+      const toHitProb = toHitProbability(toHitModifier(weapon, target));
+      const toDamageProb = toDamageProbability(weapon.pen, target.damageValue);
+      const hitsProb = hitsProbability(weapon.shots, toHitProb);
+      const killsProb = killsProbability(weapon.shots, toHitProb, toDamageProb);
+      const toPinProb = (1 - missProbability(weapon, target));
 
-      return `<div data-index="${index}">
+      return `<div class="weapon panel dark" data-index="${index}">
         ${weapon.name} :
         <input type="radio" id="close" value="c" name="${index}" ${weapon.modifiers.range === 'c' ? 'checked' : ''}>
         <label for="close">close</label>
@@ -158,21 +204,39 @@ function populateModifiersPanel(weapons: WeaponShooting[]) {
         <label for="long">long</label>
         
         ${weapon.name === 'Anti-tank Rifle' || weapon.name === 'LMG' ?
-          `<input type="checkbox" id="missing" name="${index}" value="nl">
-          <label for="loader">no loader</label>` : ''
+          `<input type="checkbox" id="loader" name="${index}" value="nl" ${weapon.modifiers.loader === true ? 'checked' : ''}>
+          <label for="loader">loader</label>` : ''
         }
 
-        <span class="highlight">To hit ${(toHitProb * 100).toFixed(1)}%</span>  &rarr; 
-        <span class="highlight">To damage ${(toDamageProb * 100).toFixed(1)}%</span>
+        <div class="space"></div>
+        
+        <span class="small">
+          <div class="box">
+            <div class="row highlight light">
+              <span class="multiplier">${weapon.shots} *</span>
+              <span class="column">
+                <span>To hit ${(toHitProb * 100).toFixed(1)}%</span>
+                <span>To damage ${(toDamageProb * 100).toFixed(1)}%</span>
+              </span>
+            </div>
+          </div>
+          <span class="highlight light">Pin ${(toPinProb * 100).toFixed(2)}%</span>
+          :
+          <span class="highlight">Hits ${hitsProb.toFixed(2)}</span>
+          &rarr;
+          <span class="highlight">Casualties ${killsProb.toFixed(2)}</span>
+        </span>
 
         <input type="button" value="x" onclick="removeWeapon(this)">
+        
       </div>`
       }).join('')}
   `;
 
-  const totalProb = getProbabilities(selectedWeapons, target);
-  document.querySelector('.probabilities .hits').innerHTML = totalProb.hits;
-  document.querySelector('.probabilities .casualties').innerHTML = totalProb.casualties;
+  const totalProb = getProbabilities(weapons, target);
+  document.querySelector('.probabilities .pinning').innerHTML = `${(totalProb.pin * 100).toFixed(4)}%`;
+  document.querySelector('.probabilities .hits').innerHTML = totalProb.hits.toFixed(2);
+  document.querySelector('.probabilities .casualties').innerHTML = totalProb.casualties.toFixed(2);
 }
 
 // FORM HANDLERS:
@@ -232,7 +296,8 @@ document
       selectedWeapons[parseInt(targetEl.name)].modifiers.range = targetEl.value as 's'|'l'|'c' :
     value === 'nl' ?
       // update missing loader modifier:
-      selectedWeapons[parseInt(targetEl.name)].modifiers.loader = true : void 0;
+      selectedWeapons[parseInt(targetEl.name)].modifiers.loader = targetEl.checked
+    : void 0;
 
     populateModifiersPanel(selectedWeapons);
   })
@@ -414,7 +479,7 @@ function displayShootingResult(weapons: WeaponResult[], target: Target) {
           return `<div>
             ${weapon.name}
             ${weapon.shotsResult.map((shot: Shot) => {
-              return `<div class="shot">
+              return `<div class="roll">
                 <span class="${shot.hit.success ? 'success' : 'failure'}">${shot.hit.crit ? '∞' : shot.hit.roll}</span>
                 <span class="panel-dark">${toHitModifier(weapon, target)}</span>
                 ${shot.hit.success ?

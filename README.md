@@ -1,5 +1,5 @@
 # Bolt Action Automator
-Combat automator for the Bolt Action wargame.
+Propability calculator for the Bolt Action wargame.
 
 ## Get started
 
