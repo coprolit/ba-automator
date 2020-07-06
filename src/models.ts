@@ -15,11 +15,12 @@ export interface Weapon {
   range: number;
   shots: number;
   pen: number;
+  assault: boolean;
 }
 
 export interface Modifiers {
   range: 'c' | 's' | 'l'; // close | short | long
-  moved: boolean; // TODO instead extracted from order dice action?
+  // moved: boolean; // TODO instead extracted from order dice action?
   loader: boolean;
 }
 export interface WeaponShooting extends Weapon {

@@ -34,7 +34,7 @@
         <form class="other">
           <label class="title">Other</label>
           
-          <input type="checkbox" id="down" name="other" value="-2">
+          <input type="checkbox" id="down">
           <label for="down">down</label>
         </form>
         
@@ -54,6 +54,17 @@
       <!-- Attacking unit -->
       <fieldset>
         <legend>Attackers</legend>
+        
+        <form>
+          <input type="checkbox" id="moved">
+          <label for="moved">moved</label>      
+        </form>
+        
+        <form>
+          <label for="pins">pins</label>
+          <input id="pins" name="pins" type="number" min="0" max="10" value="0">
+        </form>
+
         <form id="addWeapon">
           <label>Add weapons to shoot</label>
           <select name="type"></select>
