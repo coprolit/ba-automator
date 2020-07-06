@@ -63,8 +63,9 @@ const weapons: Weapon[] = [
 
 // Dynamic state:
 const selectedWeapons: WeaponShooting[] = [];
-let moved: Boolean = false;
+let moved: boolean = false;
 let pins: number = 0;
+let inexperienced: boolean = false;
 
 const target: Target = {
   cover: 'n',
@@ -171,6 +172,7 @@ function toHitModifier(weapon: WeaponShooting, moved: Boolean, pins: number, tar
   return coverLookup[target.cover]
     + (moved && !weapon.assault ? -1 : 0)
     + (-pins)
+    + (inexperienced ? -1 : 0)
     + rangeLookup[weapon.modifiers.range]
     + (weapon.modifiers.loader ? 0 : -1)
     + (target.down ? -2 : 0);
@@ -206,20 +208,24 @@ function populateModifiersPanel(weapons: WeaponShooting[]) {
       const killsProb = killsProbability(weapon.shots, toHitProb, toDamageProb);
       const toPinProb = (1 - missProbability(weapon, target));
 
-      return `<div class="weapon panel dark" data-index="${index}">
+      return `<div class="weapon" data-index="${index}">
         ${weapon.name} :
-        <input type="radio" id="close" value="c" name="${index}" ${weapon.modifiers.range === 'c' ? 'checked' : ''}>
-        <label for="close">close</label>
-    
-        <input type="radio" id="short" value="s" name="${index}" ${weapon.modifiers.range === 's' ? 'checked' : ''}>
-        <label for="short">short</label>
-    
-        <input type="radio" id="long" value="l" name="${index}" ${weapon.modifiers.range === 'l' ? 'checked' : ''}>
-        <label for="long">long</label>
-        
+        <span>
+          <input type="radio" id="close" value="c" name="${index}" ${weapon.modifiers.range === 'c' ? 'checked' : ''}>
+          <label for="close">point blank</label>
+      
+          <input type="radio" id="short" value="s" name="${index}" ${weapon.modifiers.range === 's' ? 'checked' : ''}>
+          <label for="short">short</label>
+      
+          <input type="radio" id="long" value="l" name="${index}" ${weapon.modifiers.range === 'l' ? 'checked' : ''}>
+          <label for="long">long</label>
+        </span>
         ${weapon.name === 'Anti-tank Rifle' || weapon.name === 'LMG' ?
-          `<input type="checkbox" id="loader" name="${index}" value="nl" ${weapon.modifiers.loader === true ? 'checked' : ''}>
-          <label for="loader">loader</label>` : ''
+          `&nbsp; &middot; &nbsp;
+          <span>
+            <input type="checkbox" id="loader" name="${index}" value="nl" ${weapon.modifiers.loader === true ? 'checked' : ''}>
+            <label for="loader">loader</label>
+          </span>` : ''
         }
 
         <div class="space"></div>
@@ -234,7 +240,7 @@ function populateModifiersPanel(weapons: WeaponShooting[]) {
               </span>
             </div>
           </div>
-          <span class="highlight light">Pin ${(toPinProb * 100).toFixed(2)}%</span>
+          <span class="highlight light">To pin ${(toPinProb * 100).toFixed(2)}%</span>
           :
           <span class="highlight">Hits ${hitsProb.toFixed(2)}</span>
           &rarr;
@@ -315,10 +321,18 @@ document
     populateModifiersPanel(selectedWeapons);
   })
 
-const checkboxMoved: HTMLInputElement = document.querySelector('input[id="moved"]');
-checkboxMoved.addEventListener('change', () => {
+const checkboxAdvancing: HTMLInputElement = document.querySelector('input[id="advancing"]');
+checkboxAdvancing.addEventListener('change', () => {
   // set selected unit:
-  moved = checkboxMoved.checked ? true : false;
+  moved = checkboxAdvancing.checked ? true : false;
+
+  populateModifiersPanel(selectedWeapons);
+});
+
+const checkboxInexp: HTMLInputElement = document.querySelector('input[id="inexperienced"]');
+checkboxInexp.addEventListener('change', () => {
+  // set selected unit:
+  inexperienced = checkboxInexp.checked ? true : false;
 
   populateModifiersPanel(selectedWeapons);
 });

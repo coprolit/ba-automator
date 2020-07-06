@@ -67,16 +67,10 @@ hr {
   padding: 1px 5px;
   background-color: sandybrown;
   border-radius: 4px;
+  margin-block-end: 2px;
 }
 .highlight.light {
   background-color: wheat;
-}
-
-.delimiter {
-  writing-mode: horizontal-tb;
-  margin-block-start: 10px;
-  margin-block-end: 10px;
-  border-bottom: var(--border);
 }
 
 .weapon {

@@ -71,6 +71,7 @@ var weapons = [
 var selectedWeapons = [];
 var moved = false;
 var pins = 0;
+var inexperienced = false;
 var target = {
     cover: 'n',
     damageValue: 4,
@@ -143,6 +144,7 @@ function toHitModifier(weapon, moved, pins, target) {
     return coverLookup[target.cover]
         + (moved && !weapon.assault ? -1 : 0)
         + (-pins)
+        + (inexperienced ? -1 : 0)
         + rangeLookup[weapon.modifiers.range]
         + (weapon.modifiers.loader ? 0 : -1)
         + (target.down ? -2 : 0);
@@ -167,8 +169,8 @@ function populateModifiersPanel(weapons) {
         var hitsProb = hitsProbability(weapon.shots, toHitProb);
         var killsProb = killsProbability(weapon.shots, toHitProb, toDamageProb);
         var toPinProb = (1 - missProbability(weapon, target));
-        return "<div class=\"weapon panel dark\" data-index=\"" + index + "\">\n        " + weapon.name + " :\n        <input type=\"radio\" id=\"close\" value=\"c\" name=\"" + index + "\" " + (weapon.modifiers.range === 'c' ? 'checked' : '') + ">\n        <label for=\"close\">close</label>\n    \n        <input type=\"radio\" id=\"short\" value=\"s\" name=\"" + index + "\" " + (weapon.modifiers.range === 's' ? 'checked' : '') + ">\n        <label for=\"short\">short</label>\n    \n        <input type=\"radio\" id=\"long\" value=\"l\" name=\"" + index + "\" " + (weapon.modifiers.range === 'l' ? 'checked' : '') + ">\n        <label for=\"long\">long</label>\n        \n        " + (weapon.name === 'Anti-tank Rifle' || weapon.name === 'LMG' ?
-            "<input type=\"checkbox\" id=\"loader\" name=\"" + index + "\" value=\"nl\" " + (weapon.modifiers.loader === true ? 'checked' : '') + ">\n          <label for=\"loader\">loader</label>" : '') + "\n\n        <div class=\"space\"></div>\n        \n        <span class=\"small\">\n          <div class=\"box\">\n            <div class=\"row highlight light\">\n              <span class=\"multiplier\">" + weapon.shots + " *</span>\n              <span class=\"column\">\n                <span>To hit " + (toHitProb * 100).toFixed(1) + "%</span>\n                <span>To damage " + (toDamageProb * 100).toFixed(1) + "%</span>\n              </span>\n            </div>\n          </div>\n          <span class=\"highlight light\">Pin " + (toPinProb * 100).toFixed(2) + "%</span>\n          :\n          <span class=\"highlight\">Hits " + hitsProb.toFixed(2) + "</span>\n          &rarr;\n          <span class=\"highlight\">Casualties " + killsProb.toFixed(2) + "</span>\n        </span>\n\n        <input type=\"button\" value=\"x\" onclick=\"removeWeapon(this)\">\n        \n      </div>";
+        return "<div class=\"weapon\" data-index=\"" + index + "\">\n        " + weapon.name + " :\n        <span>\n          <input type=\"radio\" id=\"close\" value=\"c\" name=\"" + index + "\" " + (weapon.modifiers.range === 'c' ? 'checked' : '') + ">\n          <label for=\"close\">point blank</label>\n      \n          <input type=\"radio\" id=\"short\" value=\"s\" name=\"" + index + "\" " + (weapon.modifiers.range === 's' ? 'checked' : '') + ">\n          <label for=\"short\">short</label>\n      \n          <input type=\"radio\" id=\"long\" value=\"l\" name=\"" + index + "\" " + (weapon.modifiers.range === 'l' ? 'checked' : '') + ">\n          <label for=\"long\">long</label>\n        </span>\n        " + (weapon.name === 'Anti-tank Rifle' || weapon.name === 'LMG' ?
+            "&nbsp; &middot; &nbsp;\n          <span>\n            <input type=\"checkbox\" id=\"loader\" name=\"" + index + "\" value=\"nl\" " + (weapon.modifiers.loader === true ? 'checked' : '') + ">\n            <label for=\"loader\">loader</label>\n          </span>" : '') + "\n\n        <div class=\"space\"></div>\n        \n        <span class=\"small\">\n          <div class=\"box\">\n            <div class=\"row highlight light\">\n              <span class=\"multiplier\">" + weapon.shots + " *</span>\n              <span class=\"column\">\n                <span>To hit " + (toHitProb * 100).toFixed(1) + "%</span>\n                <span>To damage " + (toDamageProb * 100).toFixed(1) + "%</span>\n              </span>\n            </div>\n          </div>\n          <span class=\"highlight light\">To pin " + (toPinProb * 100).toFixed(2) + "%</span>\n          :\n          <span class=\"highlight\">Hits " + hitsProb.toFixed(2) + "</span>\n          &rarr;\n          <span class=\"highlight\">Casualties " + killsProb.toFixed(2) + "</span>\n        </span>\n\n        <input type=\"button\" value=\"x\" onclick=\"removeWeapon(this)\">\n        \n      </div>";
     }).join('') + "\n  ";
     var totalProb = getProbabilities(weapons, target);
     document.querySelector('.probabilities .pinning').innerHTML = (totalProb.pin * 100).toFixed(4) + "%";
@@ -215,9 +217,14 @@ document
             : void 0;
     populateModifiersPanel(selectedWeapons);
 });
-var checkboxMoved = document.querySelector('input[id="moved"]');
-checkboxMoved.addEventListener('change', function () {
-    moved = checkboxMoved.checked ? true : false;
+var checkboxAdvancing = document.querySelector('input[id="advancing"]');
+checkboxAdvancing.addEventListener('change', function () {
+    moved = checkboxAdvancing.checked ? true : false;
+    populateModifiersPanel(selectedWeapons);
+});
+var checkboxInexp = document.querySelector('input[id="inexperienced"]');
+checkboxInexp.addEventListener('change', function () {
+    inexperienced = checkboxInexp.checked ? true : false;
     populateModifiersPanel(selectedWeapons);
 });
 document
