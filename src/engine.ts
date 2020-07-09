@@ -70,20 +70,25 @@ let inexperienced: boolean = false;
 const target: Target = {
   cover: 'n',
   damageValue: 4,
-  down: false
+  down: false,
+  building: false,
+  shield: false
 }
 
 const attackHistory: WeaponResult[][] = [];
 
 // Probability methods:
 function toHitProbability(modifier: number) {
-  const probability =
+  const factor =
     // If to hit penalty is more severe than -3,
     modifier < -3 ?
     // then a 'nigh imposible' shot (requires a 6 followed by a 6 to succeed). 
     1/6 * 1/6 :
     // else base chance + modifier.
-    (4 + modifier) / 6;
+    4 + modifier;
+
+  // A roll of 1 always fails:
+  const probability = (factor > 5 ? 5 : factor) / 6;
   
   return probability;
 }
@@ -92,19 +97,13 @@ function toMissProbability(toHitProb: number) {
   return 1 - toHitProb;
 }
 
-function toDamageProbability(pen: number, damageValue: number) {
+function toDamageProbability(modifier: number) {
+  const factor = 3 + modifier;
   
-  const dvModLookup: any = {
-    3: +1,
-    4: 0,
-    5: -1,
-    6: -2
-  }
+  // a roll of 1 always fails:
+  const probability = (factor > 5 ? 5 : factor) / 6; 
 
-  const factorRaw = 3 + dvModLookup[damageValue] + pen;
-  const factor = factorRaw > 5 ? 5 : factorRaw; 
-
-  return factor / 6;
+  return probability;
 }
 
 function hitsProbability(shots: number, toHitProb: number) {
@@ -145,7 +144,7 @@ function getProbabilities(weapons: WeaponShooting[], target: Target) {
     return acc + killsProbability(
       weapon.shots,
       toHitProbability(toHitModifier(weapon, moved, pins, target)),
-      toDamageProbability(weapon.pen, target.damageValue)
+      toDamageProbability(toDamageModifier(weapon.pen, target))
     );
   }, 0);
   
@@ -169,13 +168,30 @@ function toHitModifier(weapon: WeaponShooting, moved: Boolean, pins: number, tar
     l: -1, // long
   }
 
-  return coverLookup[target.cover]
+  // if in building: cover = -2, else use regular cover modifier.
+
+  return (target.building ? -2 : coverLookup[target.cover])
     + (moved && !weapon.assault ? -1 : 0)
     + (-pins)
     + (inexperienced ? -1 : 0)
     + rangeLookup[weapon.modifiers.range]
     + (weapon.modifiers.loader ? 0 : -1)
     + (target.down ? -2 : 0);
+}
+
+function toDamageModifier(pen: number, target: Target) {
+  const dvModLookup: any = {
+    3: +1,
+    4: 0,
+    5: -1,
+    6: -2,
+    7: -3
+  }
+
+  return dvModLookup[target.damageValue]
+    + (target.building ? -1 : 0) // except for flamethrowers and HE
+    + (target.shield ? -1 : 0)
+    + pen;
 }
 
 // UI:
@@ -198,19 +214,20 @@ document.querySelector('#addWeapon select').innerHTML =
     `<option value="${index}">${weapon.name}</option>`
   ).join('');
 
-function populateModifiersPanel(weapons: WeaponShooting[]) {
+function populateModifiersPanel(weapons: WeaponShooting[]) {  
   // display selected weapons for modifier adjustments:
   document.querySelector('.modifiers .weapons').innerHTML = `
     ${weapons.map((weapon, index) => {
       const toHitProb = toHitProbability(toHitModifier(weapon, moved, pins, target));
-      const toDamageProb = toDamageProbability(weapon.pen, target.damageValue);
+      const toDamageProb = toDamageProbability(toDamageModifier(weapon.pen, target));
       const hitsProb = hitsProbability(weapon.shots, toHitProb);
       const killsProb = killsProbability(weapon.shots, toHitProb, toDamageProb);
       const toPinProb = (1 - missProbability(weapon, target));
 
       return `<div class="weapon" data-index="${index}">
         ${weapon.name} :
-        <span>
+        <span class="radio-group">
+        
           <input type="radio" id="close" value="c" name="${index}" ${weapon.modifiers.range === 'c' ? 'checked' : ''}>
           <label for="close">point blank</label>
       
@@ -221,7 +238,7 @@ function populateModifiersPanel(weapons: WeaponShooting[]) {
           <label for="long">long</label>
         </span>
         ${weapon.name === 'Anti-tank Rifle' || weapon.name === 'LMG' ?
-          `&nbsp; &middot; &nbsp;
+          `&nbsp;
           <span>
             <input type="checkbox" id="loader" name="${index}" value="nl" ${weapon.modifiers.loader === true ? 'checked' : ''}>
             <label for="loader">loader</label>
@@ -345,7 +362,8 @@ document
     populateModifiersPanel(selectedWeapons);
   });
 
-// store target cover modifier:
+// Store target modifiers:
+// - Cover:
 document
   .querySelector('form.cover')
   .addEventListener('change', (event: Event) => {
@@ -354,20 +372,38 @@ document
     populateModifiersPanel(selectedWeapons);
   });
 
-// store target damage value modifier:
+// - Damage value:
 document
   .querySelector('form.damageValue')
   .addEventListener('change', (event: Event) => {
     target.damageValue = parseInt((<HTMLInputElement>event.target).value);
-
+    
     populateModifiersPanel(selectedWeapons);
   });
 
-// store target down state:
+// - Down:
 const checkboxDown: HTMLInputElement = document.querySelector('input[id="down"]');
 checkboxDown.addEventListener('change', () => {
   // set selected unit:
   target.down = checkboxDown.checked ? true : false;
+
+  populateModifiersPanel(selectedWeapons);
+});
+
+// - In building (grants extra protection, expect from HE and flamethrowers):
+const checkboxInBuilding: HTMLInputElement = document.querySelector('input[id="building"]');
+checkboxInBuilding.addEventListener('change', () => {
+  // set selected unit:
+  target.building = checkboxInBuilding.checked ? true : false;
+
+  populateModifiersPanel(selectedWeapons);
+});
+
+// - Gun shield (grants extra protection, expect from HE and flamethrowers):
+const checkboxShield: HTMLInputElement = document.querySelector('input[id="shield"]');
+checkboxShield.addEventListener('change', () => {
+  // set selected unit:
+  target.shield = checkboxShield.checked ? true : false;
 
   populateModifiersPanel(selectedWeapons);
 });

@@ -3,6 +3,8 @@
   cover: 'n' | 's' | 'h'; // none | soft | hard
   damageValue: number;
   down: boolean;
+  building: boolean;
+  shield: boolean;
 }
 
 export interface Unit {

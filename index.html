@@ -21,14 +21,14 @@
         <legend>Target</legend>
         <form class="cover">
           <label class="title">Cover</label>
-          <input type="radio" id="none" name="cover" value="n" checked>
-          <label for="none">none</label>
-      
-          <input type="radio" id="soft" name="cover" value="s">
-          <label for="soft">soft</label>
-      
-          <input type="radio" id="hard" name="cover" value="h">
-          <label for="hard">hard</label>
+          <div class="radio-group">
+            <input type="radio" id="nc" name="cover" value="n" checked>
+            <label for="nc">none</label>
+            <input type="radio" id="sc" name="cover" value="s">
+            <label for="sc">soft</label>
+            <input type="radio" id="hc" name="cover" value="h">
+            <label for="hc">hard</label>
+          </div>
         </form>
         
         <form class="other">
@@ -36,18 +36,32 @@
           
           <input type="checkbox" id="down">
           <label for="down">down</label>
+          &nbsp; &middot; &nbsp;
+          <input type="checkbox" id="building">
+          <label for="building">in building</label>
+          &nbsp; &middot; &nbsp;
+          <input type="checkbox" id="shield">
+          <label for="shield">gun shield / body armour</label>
         </form>
         
         <form class="damageValue">
           <label class="title">Damage Value</label>
-          <input type="radio" id="inex" name="dv" value="3">
-          <label for="inex">inexperienced inf</label>
-      
-          <input type="radio" id="reg" name="dv" value="4" checked>
-          <label for="reg">regular inf</label>
-      
-          <input type="radio" id="vet" name="dv" value="5">
-          <label for="vet">veteran inf</label>
+          <div class="radio-group">
+            <input type="radio" id="inex" name="dv" value="3">
+            <label for="inex">inexperienced inf</label>
+        
+            <input type="radio" id="reg" name="dv" value="4" checked>
+            <label for="reg">regular inf</label>
+        
+            <input type="radio" id="vet" name="dv" value="5">
+            <label for="vet">veteran inf</label>
+            
+            <input type="radio" id="softskin" name="dv" value="6">
+            <label for="softskin">soft-skinned</label>
+            
+            <input type="radio" id="ac" name="dv" value="7">
+            <label for="ac">armoured car</label>
+          </div>
         </form>
       </fieldset>
 

@@ -54,6 +54,37 @@ hr {
   font-style: italic;
 }
 
+.radio-group {
+  border: var(--border);
+  display: inline-flex;
+  border-radius: 8px;
+  overflow: hidden;
+  font-size: 1.5vmax;
+}
+
+input[type=radio] {
+  position: absolute;
+  visibility: hidden;
+  display: none;
+}
+
+input[type=radio] + label {
+  padding: 5px 10px;
+  display: inline-block;
+  cursor: pointer;
+  color: grey;
+  background: whitesmoke;
+}
+label + input[type=radio] + label {
+  border-left: var(--border);
+}
+
+input[type=radio]:checked + label{
+  font-weight: 700;
+  color: black;
+  background: white;
+}
+
 .panel {
   padding: 10px;
   margin-block-end: 10px;
