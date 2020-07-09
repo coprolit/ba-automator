@@ -19,30 +19,6 @@
       <!-- Target unit -->
       <fieldset>
         <legend>Target</legend>
-        <form class="cover">
-          <label class="title">Cover</label>
-          <div class="radio-group">
-            <input type="radio" id="nc" name="cover" value="n" checked>
-            <label for="nc">none</label>
-            <input type="radio" id="sc" name="cover" value="s">
-            <label for="sc">soft</label>
-            <input type="radio" id="hc" name="cover" value="h">
-            <label for="hc">hard</label>
-          </div>
-        </form>
-        
-        <form class="other">
-          <label class="title">Other</label>
-          
-          <input type="checkbox" id="down">
-          <label for="down">down</label>
-          &nbsp; &middot; &nbsp;
-          <input type="checkbox" id="building">
-          <label for="building">in building</label>
-          &nbsp; &middot; &nbsp;
-          <input type="checkbox" id="shield">
-          <label for="shield">gun shield / body armour</label>
-        </form>
         
         <form class="damageValue">
           <label class="title">Damage Value</label>
@@ -63,6 +39,35 @@
             <label for="ac">armoured car</label>
           </div>
         </form>
+
+        <form class="cover">
+          <label class="title">Cover</label>
+          <div class="radio-group">
+            <input type="radio" id="nc" name="cover" value="n" checked>
+            <label for="nc">none</label>
+            <input type="radio" id="sc" name="cover" value="s">
+            <label for="sc">soft</label>
+            <input type="radio" id="hc" name="cover" value="h">
+            <label for="hc">hard</label>
+          </div>
+        </form>
+        
+        <div>
+          <input type="checkbox" id="down">
+          <label for="down">down</label>
+        </div>
+        <div>
+          <input type="checkbox" id="small">
+          <label for="small">small unit</label>
+        </div>
+        <div>
+          <input type="checkbox" id="building">
+          <label for="building">in building</label>
+        </div>
+        <div>
+          <input type="checkbox" id="shield">
+          <label for="shield">gun shield / body armour</label>
+        </div>
       </fieldset>
 
       <!-- Attacking unit -->

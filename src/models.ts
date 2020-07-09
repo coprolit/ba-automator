@@ -5,6 +5,7 @@
   down: boolean;
   building: boolean;
   shield: boolean;
+  small: boolean;
 }
 
 export interface Unit {
