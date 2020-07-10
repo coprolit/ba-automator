@@ -74,14 +74,18 @@
       <fieldset>
         <legend>Attackers</legend>
         
-        <input type="checkbox" id="advancing">
-        <label for="advancing">advancing</label>      
-        &nbsp; &middot; &nbsp;
-        <label for="pins">pins</label>
-        <input id="pins" name="pins" type="number" min="0" max="10" value="0">
-        &nbsp; &middot; &nbsp;
-        <input type="checkbox" id="inexperienced">
-        <label for="inexperienced">inexperienced</label>
+        <div>
+          <label for="pins">pins</label>
+          <input id="pins" name="pins" type="number" min="0" max="10" value="0">
+        </div>
+        <div>
+          <input type="checkbox" id="advancing">
+          <label for="advancing">advancing</label>
+        </div>
+        <div>
+          <input type="checkbox" id="inexperienced">
+          <label for="inexperienced">inexperienced</label>
+        </div>
 
         <form id="addWeapon" class="panel dark">
           <label>Add weapons to shoot</label>

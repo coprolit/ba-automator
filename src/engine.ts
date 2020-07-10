@@ -155,7 +155,7 @@ function getProbabilities(weapons: WeaponShooting[], target: Target) {
       acc + killsProbability(
         weapon.shots,
         toHitProbability(toHitModifier(weapon, moved, pins, target)),
-        toDamageProbability(toDamageModifier(weapon.pen, target))
+        toDamageProbability(toDamageModifier(weapon, target))
       );
   }, 0);
   
@@ -189,7 +189,7 @@ function toHitModifier(weapon: WeaponShooting, moved: Boolean, pins: number, tar
     + (target.down ? -2 : 0);
 }
 
-function toDamageModifier(pen: number, target: Target) {
+function toDamageModifier(weapon: WeaponShooting, target: Target) {
   const dvModLookup: any = {
     3: +1,
     4: 0,
@@ -201,7 +201,9 @@ function toDamageModifier(pen: number, target: Target) {
   return dvModLookup[target.damageValue]
     + (target.building ? -1 : 0) // except for flamethrowers and HE
     + (target.shield ? -1 : 0)
-    + pen;
+    // long range for Heavy Weapon Against Armoured Targets:
+    + (weapon.modifiers.range === 'l' && target.damageValue > 6 && weapon.pen > 0 ? -1 : 0)
+    + weapon.pen;
 }
 
 function cannotHarmTarget(weapon: WeaponShooting, target: Target) {
@@ -273,7 +275,7 @@ function populateModifiersPanel(weapons: WeaponShooting[]) {
 
 function weaponProbabilitiesElement(weapon: WeaponShooting, target: Target) {
   const toHitProb = toHitProbability(toHitModifier(weapon, moved, pins, target));
-  const toDamageProb = toDamageProbability(toDamageModifier(weapon.pen, target));
+  const toDamageProb = toDamageProbability(toDamageModifier(weapon, target));
   const hitsProb = hitsProbability(weapon.shots, toHitProb);
   const killsProb = killsProbability(weapon.shots, toHitProb, toDamageProb);
   const toPinProb = (1 - missProbability(weapon, target));

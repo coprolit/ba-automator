@@ -125,7 +125,7 @@ function getProbabilities(weapons, target) {
     var casualties = weapons.reduce(function (acc, weapon) {
         return cannotHarmTarget(weapon, target) ?
             acc :
-            acc + killsProbability(weapon.shots, toHitProbability(toHitModifier(weapon, moved, pins, target)), toDamageProbability(toDamageModifier(weapon.pen, target)));
+            acc + killsProbability(weapon.shots, toHitProbability(toHitModifier(weapon, moved, pins, target)), toDamageProbability(toDamageModifier(weapon, target)));
     }, 0);
     return {
         pin: 1 - missProb,
@@ -152,7 +152,7 @@ function toHitModifier(weapon, moved, pins, target) {
         + (weapon.modifiers.loader ? 0 : -1)
         + (target.down ? -2 : 0);
 }
-function toDamageModifier(pen, target) {
+function toDamageModifier(weapon, target) {
     var dvModLookup = {
         3: +1,
         4: 0,
@@ -163,7 +163,8 @@ function toDamageModifier(pen, target) {
     return dvModLookup[target.damageValue]
         + (target.building ? -1 : 0)
         + (target.shield ? -1 : 0)
-        + pen;
+        + (weapon.modifiers.range === 'l' && target.damageValue > 6 && weapon.pen > 0 ? -1 : 0)
+        + weapon.pen;
 }
 function cannotHarmTarget(weapon, target) {
     return weapon.pen === 0 && target.damageValue > 6;
@@ -194,7 +195,7 @@ function populateModifiersPanel(weapons) {
 }
 function weaponProbabilitiesElement(weapon, target) {
     var toHitProb = toHitProbability(toHitModifier(weapon, moved, pins, target));
-    var toDamageProb = toDamageProbability(toDamageModifier(weapon.pen, target));
+    var toDamageProb = toDamageProbability(toDamageModifier(weapon, target));
     var hitsProb = hitsProbability(weapon.shots, toHitProb);
     var killsProb = killsProbability(weapon.shots, toHitProb, toDamageProb);
     var toPinProb = (1 - missProbability(weapon, target));
