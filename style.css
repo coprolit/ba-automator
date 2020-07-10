@@ -53,6 +53,10 @@ hr {
 .italic {
   font-style: italic;
 }
+.center {
+  display: flex;
+  justify-content: center;
+}
 
 .radio-group {
   border: var(--border);
@@ -117,18 +121,9 @@ input[type=radio]:checked + label{
   flex-grow: 1;
 }
 
-
 .roll {
   margin-left: 1rem;
   font-size: smaller;
-}
-
-.stats {
-  position: absolute;
-  right: 10px;
-  bottom: 10px;
-  box-shadow: 2px 2px 1px 1px rgba(0, 0, 0, .1);
-  background-color: ghostwhite;
 }
 
 .row {
@@ -149,4 +144,8 @@ input[type=radio]:checked + label{
 
 .box {
   display: inline-block;
+}
+
+.panel.small.center > * {
+  margin-right: 4px;
 }
