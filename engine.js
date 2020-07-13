@@ -51,9 +51,44 @@ var lmg = {
     pen: 0,
     assault: false
 };
+var mmg = {
+    name: "MMG",
+    range: 36,
+    shots: 5,
+    pen: 0,
+    assault: false
+};
+var hmg = {
+    name: "HMG",
+    range: 36,
+    shots: 3,
+    pen: 1,
+    assault: false
+};
 var panzerfaust = {
     name: "Panzerfaust",
     range: 12,
+    shots: 1,
+    pen: 6,
+    assault: false
+};
+var latgun = {
+    name: "Light AT gun",
+    range: 48,
+    shots: 1,
+    pen: 4,
+    assault: false
+};
+var matgun = {
+    name: "Medium AT gun",
+    range: 60,
+    shots: 1,
+    pen: 5,
+    assault: false
+};
+var hatgun = {
+    name: "Heavy AT gun",
+    range: 72,
     shots: 1,
     pen: 6,
     assault: false
@@ -66,7 +101,7 @@ var unarmed = {
     assault: false
 };
 var weapons = [
-    rifle, smg, assaultRifle, autoRifle, lmg, atr, panzerfaust, unarmed,
+    rifle, smg, assaultRifle, autoRifle, lmg, mmg, hmg, atr, panzerfaust, latgun, matgun, hatgun, unarmed,
 ];
 var selectedWeapons = [];
 var moved = false;
@@ -184,8 +219,8 @@ document.querySelector('#addWeapon select').innerHTML =
     }).join('');
 function populateModifiersPanel(weapons) {
     document.querySelector('.modifiers .weapons').innerHTML = "\n    " + weapons.map(function (weapon, index) {
-        return "<div class=\"weapon\" data-index=\"" + index + "\">\n        " + weapon.name + " :\n        <span class=\"radio-group\">\n        \n          <input type=\"radio\" id=\"close\" value=\"c\" name=\"" + index + "\" " + (weapon.modifiers.range === 'c' ? 'checked' : '') + ">\n          <label for=\"close\">point blank</label>\n      \n          <input type=\"radio\" id=\"short\" value=\"s\" name=\"" + index + "\" " + (weapon.modifiers.range === 's' ? 'checked' : '') + ">\n          <label for=\"short\">short</label>\n      \n          <input type=\"radio\" id=\"long\" value=\"l\" name=\"" + index + "\" " + (weapon.modifiers.range === 'l' ? 'checked' : '') + ">\n          <label for=\"long\">long</label>\n        </span>\n        " + (weapon.name === 'Anti-tank Rifle' || weapon.name === 'LMG' ?
-            "&nbsp;\n          <span>\n            <input type=\"checkbox\" id=\"loader\" name=\"" + index + "\" value=\"nl\" " + (weapon.modifiers.loader === true ? 'checked' : '') + ">\n            <label for=\"loader\">loader</label>\n          </span>" : '') + "\n\n        <div class=\"space\"></div>\n\n        " + (cannotHarmTarget(weapon, target) ? '<span class="failure small">cannot damage</span>' :
+        return "<div class=\"weapon\" data-index=\"" + index + "\">\n        " + weapon.name + " :\n        <span class=\"radio-group\">\n        \n          <input type=\"radio\" id=\"close\" value=\"c\" name=\"" + index + "\" " + (weapon.modifiers.range === 'c' ? 'checked' : '') + ">\n          <label for=\"close\">Point blank</label>\n      \n          <input type=\"radio\" id=\"short\" value=\"s\" name=\"" + index + "\" " + (weapon.modifiers.range === 's' ? 'checked' : '') + ">\n          <label for=\"short\">Short</label>\n      \n          <input type=\"radio\" id=\"long\" value=\"l\" name=\"" + index + "\" " + (weapon.modifiers.range === 'l' ? 'checked' : '') + ">\n          <label for=\"long\">Long</label>\n        </span>\n        " + (weapon.name === 'Anti-tank Rifle' || weapon.name === 'LMG' ?
+            "&nbsp;\n          <span>\n            <input type=\"checkbox\" id=\"loader\" name=\"" + index + "\" value=\"nl\" " + (weapon.modifiers.loader === true ? 'checked' : '') + ">\n            <label for=\"loader\">Loader</label>\n          </span>" : '') + "\n\n        <div class=\"space\"></div>\n\n        " + (cannotHarmTarget(weapon, target) ? '<span class="failure small">cannot damage</span>' :
             weaponProbabilitiesElement(weapon, target)) + "\n\n        <input type=\"button\" value=\"x\" onclick=\"removeWeapon(this)\">\n        \n      </div>";
     }).join('') + "\n  ";
     var totalProb = getProbabilities(weapons, target);
@@ -294,15 +329,14 @@ function shoot(weapons, target) {
         .map(function (weapon) {
         var shots = getShots(weapon);
         var modifier = toHitModifier(weapon, moved, pins, target);
-        return __assign(__assign({}, weapon), { shotsResult: shots.map(function () {
-                return {
-                    hit: rollToHit(modifier)
-                };
-            }) });
+        return __assign(__assign({}, weapon), { shotsResult: cannotHarmTarget(weapon, target) ?
+                [] :
+                shots.map(function () { return { hit: rollToHit(modifier) }; }) });
     })
         .map(function (weapon) {
         weapon.shotsResult = weapon.shotsResult.map(function (shot) {
-            if (shot.hit.success) {
+            var _a;
+            if ((_a = shot.hit) === null || _a === void 0 ? void 0 : _a.success) {
                 return __assign(__assign({}, shot), { damage: rollToDamage(weapon.pen, target.damageValue) });
             }
             else {
@@ -372,10 +406,10 @@ function displayShootingResult(weapons, target) {
     document
         .querySelector('.results')
         .insertAdjacentHTML("beforeend", "<fieldset>\n        <legend>\n          Unit shoots!\n        </legend>\n        " + weapons.map(function (weapon) {
-        return "<div>\n            " + weapon.name + "\n            " + weapon.shotsResult.map(function (shot) {
+        return "<div>\n            " + weapon.name + "\n            " + (weapon.shotsResult.length ? weapon.shotsResult.map(function (shot) {
             return "<div class=\"roll\">\n                <span class=\"" + (shot.hit.success ? 'success' : 'failure') + "\">" + (shot.hit.crit ? '∞' : shot.hit.roll) + "</span>\n                <span class=\"panel-dark\">" + toHitModifier(weapon, moved, pins, target) + "</span>\n                " + (shot.hit.success ?
                 "&rarr; <span class=\"" + (shot.damage.success ? 'success' : 'failure') + "\">" + (shot.damage.crit ? 'E' : shot.damage.roll) + " </span>\n                  <span class=\"panel-dark\">" + shot.damage.modifier + "</span>" : '') + "\n              </div>";
-        }).join('') + "\n          </div>\n          <div class=\"delimiter\"></div>";
+        }).join('') : '<div class="roll failure">N/A</div>') + "\n          </div>\n          <div class=\"delimiter\"></div>";
     }).join('') + "\n\n        <span class=\"title\">Result</span>\n        <span class=\"highlight\">Hits <span class=\"hits\">" + hits(weapons) + "</span></span> &rarr; \n        <span class=\"highlight\">Casualties <span class=\"casualties\">" + casualties(weapons) + "</span></span>\n        <span class=\"highlight\">Exceptional damage <span class=\"casualties\">" + crits(weapons) + "</span></span>\n      \n      </fieldset>");
 }
 //# sourceMappingURL=engine.js.map

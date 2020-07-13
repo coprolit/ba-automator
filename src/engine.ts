@@ -42,9 +42,44 @@ const lmg = {
   pen: 0,
   assault: false
 }
+const mmg = {
+  name: "MMG",
+  range: 36,
+  shots: 5,
+  pen: 0,
+  assault: false
+}
+const hmg = {
+  name: "HMG",
+  range: 36,
+  shots: 3,
+  pen: 1,
+  assault: false
+}
 const panzerfaust = {
   name: "Panzerfaust",
   range: 12,
+  shots: 1,
+  pen: 6,
+  assault: false
+}
+const latgun = {
+  name: "Light AT gun",
+  range: 48,
+  shots: 1,
+  pen: 4,
+  assault: false
+}
+const matgun = {
+  name: "Medium AT gun",
+  range: 60,
+  shots: 1,
+  pen: 5,
+  assault: false
+}
+const hatgun = {
+  name: "Heavy AT gun",
+  range: 72,
   shots: 1,
   pen: 6,
   assault: false
@@ -58,7 +93,7 @@ const unarmed = {
 }
 
 const weapons: Weapon[] = [
-  rifle, smg, assaultRifle, autoRifle, lmg, atr, panzerfaust, unarmed, 
+  rifle, smg, assaultRifle, autoRifle, lmg, mmg, hmg, atr, panzerfaust, latgun, matgun, hatgun, unarmed, 
 ]
 
 // Dynamic state:
@@ -239,19 +274,19 @@ function populateModifiersPanel(weapons: WeaponShooting[]) {
         <span class="radio-group">
         
           <input type="radio" id="close" value="c" name="${index}" ${weapon.modifiers.range === 'c' ? 'checked' : ''}>
-          <label for="close">point blank</label>
+          <label for="close">Point blank</label>
       
           <input type="radio" id="short" value="s" name="${index}" ${weapon.modifiers.range === 's' ? 'checked' : ''}>
-          <label for="short">short</label>
+          <label for="short">Short</label>
       
           <input type="radio" id="long" value="l" name="${index}" ${weapon.modifiers.range === 'l' ? 'checked' : ''}>
-          <label for="long">long</label>
+          <label for="long">Long</label>
         </span>
         ${weapon.name === 'Anti-tank Rifle' || weapon.name === 'LMG' ?
           `&nbsp;
           <span>
             <input type="checkbox" id="loader" name="${index}" value="nl" ${weapon.modifiers.loader === true ? 'checked' : ''}>
-            <label for="loader">loader</label>
+            <label for="loader">Loader</label>
           </span>` : ''
         }
 
@@ -343,6 +378,7 @@ function removeWeapon(element: HTMLInputElement) {
 }
 
 // Store shooting modifiers:
+// - Range:
 document
   .querySelector('.modifiers .weapons')
   .addEventListener('change', (event: Event) => {
@@ -360,6 +396,7 @@ document
     populateModifiersPanel(selectedWeapons);
   })
 
+// - Advancing:
 const checkboxAdvancing: HTMLInputElement = document.querySelector('input[id="advancing"]');
 checkboxAdvancing.addEventListener('change', () => {
   // set selected unit:
@@ -368,6 +405,7 @@ checkboxAdvancing.addEventListener('change', () => {
   populateModifiersPanel(selectedWeapons);
 });
 
+// - Inexperienced:
 const checkboxInexp: HTMLInputElement = document.querySelector('input[id="inexperienced"]');
 checkboxInexp.addEventListener('change', () => {
   // set selected unit:
@@ -376,6 +414,7 @@ checkboxInexp.addEventListener('change', () => {
   populateModifiersPanel(selectedWeapons);
 });
 
+// - Pins:
 document
   .querySelector('#pins')
   .addEventListener('change', (event: Event) => {
@@ -412,7 +451,7 @@ checkboxDown.addEventListener('change', () => {
   populateModifiersPanel(selectedWeapons);
 });
 
-// - In building (grants extra protection, expect from HE and flamethrowers):
+// - In building (grants extra protection, except from HE and flamethrowers):
 const checkboxInBuilding: HTMLInputElement = document.querySelector('input[id="building"]');
 checkboxInBuilding.addEventListener('change', () => {
   // set selected unit:
@@ -421,7 +460,7 @@ checkboxInBuilding.addEventListener('change', () => {
   populateModifiersPanel(selectedWeapons);
 });
 
-// - Gun shield (grants extra protection, expect from HE and flamethrowers):
+// - Gun shield (grants extra protection, except from HE and flamethrowers):
 const checkboxShield: HTMLInputElement = document.querySelector('input[id="shield"]');
 checkboxShield.addEventListener('change', () => {
   // set selected unit:
@@ -451,17 +490,15 @@ function shoot(weapons: WeaponShooting[], target: Target): WeaponResult[] {
       return {
         ...weapon,
         // resolve and add hit results for each shot:
-        shotsResult: shots.map(() => {
-          return {
-            hit: rollToHit(modifier)
-          }
-        })
+        shotsResult: cannotHarmTarget(weapon, target) ?
+          [] :
+          shots.map(() => { return { hit: rollToHit(modifier)} })
       };
     })
     .map((weapon: WeaponResult) => {
       weapon.shotsResult = weapon.shotsResult.map((shot: Shot) => {
         // for each hit
-        if (shot.hit.success) {
+        if (shot.hit?.success) {
           return {
             ...shot,
             // resolve and add damage results:
@@ -470,7 +507,7 @@ function shoot(weapons: WeaponShooting[], target: Target): WeaponResult[] {
         } else {
           return shot;
         }
-      });
+      })
 
       return weapon;
     });
@@ -490,9 +527,6 @@ function rollToHit(modifier: number): Score {
   
   // Result > 2 = successful hit.
   // Roll of a 1 is always a failure.
-  
-  // If modifier is more than -3 (nigh impossible shot),
-  // need to roll a 6 followed by a 6.
 
   const dice: number = roll();
   
@@ -588,7 +622,7 @@ function displayShootingResult(weapons: WeaponResult[], target: Target) {
         ${weapons.map(weapon => {
           return `<div>
             ${weapon.name}
-            ${weapon.shotsResult.map((shot: Shot) => {
+            ${weapon.shotsResult.length ? weapon.shotsResult.map((shot: Shot) => {
               return `<div class="roll">
                 <span class="${shot.hit.success ? 'success' : 'failure'}">${shot.hit.crit ? '∞' : shot.hit.roll}</span>
                 <span class="panel-dark">${toHitModifier(weapon, moved, pins, target)}</span>
@@ -596,7 +630,7 @@ function displayShootingResult(weapons: WeaponResult[], target: Target) {
                   `&rarr; <span class="${shot.damage.success ? 'success' : 'failure'}">${shot.damage.crit ? 'E' : shot.damage.roll} </span>
                   <span class="panel-dark">${shot.damage.modifier}</span>` : ''}
               </div>`;
-            }).join('')}
+            }).join('') : '<div class="roll failure">N/A</div>'}
           </div>
           <div class="delimiter"></div>`;
         }).join('')}
