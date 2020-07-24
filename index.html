@@ -25,7 +25,7 @@
             <input type="radio" id="inex" name="dv" value="3">
             <label for="inex">inexperienced inf</label>
         
-            <input type="radio" id="reg" name="dv" value="4" checked>
+            <input type="radio" id="reg" name="dv" value="4">
             <label for="reg">regular inf</label>
         
             <input type="radio" id="vet" name="dv" value="5">
@@ -51,22 +51,35 @@
           </div>
         </form>
         
-        <div>
-          <input type="checkbox" id="down">
-          <label for="down">Down</label>
-        </div>
-        <div>
-          <input type="checkbox" id="small">
-          <label for="small">Small unit</label>
-        </div>
-        <div>
-          <input type="checkbox" id="building">
-          <label for="building">In building</label>
-        </div>
-        <div>
-          <input type="checkbox" id="shield">
-          <label for="shield">Gun shield / Body armour</label>
-        </div>
+        <span class="inf" hidden>
+          <div>
+            <input type="checkbox" id="down">
+            <label for="down">Down</label>
+          </div>
+          <div>
+            <input type="checkbox" id="small">
+            <label for="small">Small unit</label>
+          </div>
+          <div>
+            <input type="checkbox" id="building">
+            <label for="building">In building</label>
+          </div>
+          <div>
+            <input type="checkbox" id="shield">
+            <label for="shield">Gun shield / Body armour</label>
+          </div>
+        </span>
+
+        <form class="side" hidden>
+          <div class="radio-group">
+            <input type="radio" id="af" name="arc" value="f" checked>
+            <label for="af">Front</label>
+            <input type="radio" id="as" name="arc" value="s">
+            <label for="as">Side / top armour</label>
+            <input type="radio" id="ar" name="arc" value="r">
+            <label for="ar">Rear armour</label>
+          </div>
+        </form>
       </fieldset>
 
       <!-- Attacking unit -->
@@ -121,7 +134,7 @@
         <div><span>F</span> = failure (regardless of any modifiers, a roll of a <b>1</b> is always a failure)</div>
         <div>
           3 <span class="panel-dark">-1</span> -> 3 <span class="panel-dark">2</span> =
-          <b>to hit roll</b> <span class="panel-dark">to hit modifier</span> <b>-> to damage roll</b> <span class="panel-dark">penetration value</span>
+          <b>to hit roll</b> <span class="panel-dark">to hit modifier</span> <b>-> to damage roll</b> <span class="panel-dark">to damage modifier</span>
         </div>
       </div>
 

@@ -6,6 +6,7 @@
   building: boolean;
   shield: boolean;
   small: boolean;
+  arc: 'f' | 's' | 'r';
 }
 
 export interface Unit {

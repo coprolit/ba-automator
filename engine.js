@@ -100,6 +100,7 @@ var unarmed = {
     pen: 0,
     assault: false
 };
+var units = {};
 var weapons = [
     rifle, smg, assaultRifle, autoRifle, lmg, mmg, hmg, atr, panzerfaust, latgun, matgun, hatgun, unarmed,
 ];
@@ -113,7 +114,8 @@ var target = {
     down: false,
     building: false,
     shield: false,
-    small: false
+    small: false,
+    arc: 'f'
 };
 var attackHistory = [];
 function toHitProbability(modifier) {
@@ -126,8 +128,8 @@ function toHitProbability(modifier) {
 function toMissProbability(toHitProb) {
     return 1 - toHitProb;
 }
-function toDamageProbability(modifier) {
-    var factor = 3 + modifier;
+function toDamageProbability(modifier, damageValue) {
+    var factor = 3 + (4 - damageValue) + modifier;
     var probability = (factor > 5 ? 5 : factor) / 6;
     return probability;
 }
@@ -160,7 +162,7 @@ function getProbabilities(weapons, target) {
     var casualties = weapons.reduce(function (acc, weapon) {
         return cannotHarmTarget(weapon, target) ?
             acc :
-            acc + killsProbability(weapon.shots, toHitProbability(toHitModifier(weapon, moved, pins, target)), toDamageProbability(toDamageModifier(weapon, target)));
+            acc + killsProbability(weapon.shots, toHitProbability(toHitModifier(weapon, moved, pins, target)), toDamageProbability(toDamageModifier(weapon, target), target.damageValue));
     }, 0);
     return {
         pin: 1 - missProb,
@@ -185,20 +187,19 @@ function toHitModifier(weapon, moved, pins, target) {
         + (inexperienced ? -1 : 0)
         + rangeLookup[weapon.modifiers.range]
         + (weapon.modifiers.loader ? 0 : -1)
-        + (target.down ? -2 : 0);
+        + (target.down ? -2 : 0)
+        + (target.small ? -1 : 0);
 }
 function toDamageModifier(weapon, target) {
-    var dvModLookup = {
-        3: +1,
-        4: 0,
-        5: -1,
-        6: -2,
-        7: -3
+    var arcLookup = {
+        f: 0,
+        s: +1,
+        r: +2
     };
-    return dvModLookup[target.damageValue]
-        + (target.building ? -1 : 0)
+    return (target.building ? -1 : 0)
         + (target.shield ? -1 : 0)
         + (weapon.modifiers.range === 'l' && target.damageValue > 6 && weapon.pen > 0 ? -1 : 0)
+        + (weapon.pen > 0 ? arcLookup[target.arc] : 0)
         + weapon.pen;
 }
 function cannotHarmTarget(weapon, target) {
@@ -230,7 +231,7 @@ function populateModifiersPanel(weapons) {
 }
 function weaponProbabilitiesElement(weapon, target) {
     var toHitProb = toHitProbability(toHitModifier(weapon, moved, pins, target));
-    var toDamageProb = toDamageProbability(toDamageModifier(weapon, target));
+    var toDamageProb = toDamageProbability(toDamageModifier(weapon, target), target.damageValue);
     var hitsProb = hitsProbability(weapon.shots, toHitProb);
     var killsProb = killsProbability(weapon.shots, toHitProb, toDamageProb);
     var toPinProb = (1 - missProbability(weapon, target));
@@ -302,6 +303,18 @@ document
     .querySelector('form.damageValue')
     .addEventListener('change', function (event) {
     target.damageValue = parseInt(event.target.value);
+    if (target.damageValue < 6) {
+        document.querySelector('.inf').removeAttribute('hidden');
+    }
+    else {
+        document.querySelector('.inf').setAttribute('hidden', '');
+    }
+    if (target.damageValue > 6) {
+        document.querySelector('.side').removeAttribute('hidden');
+    }
+    else {
+        document.querySelector('.side').setAttribute('hidden', '');
+    }
     populateModifiersPanel(selectedWeapons);
 });
 var checkboxDown = document.querySelector('input[id="down"]');
@@ -324,6 +337,12 @@ checkboxSmall.addEventListener('change', function () {
     target.small = checkboxSmall.checked ? true : false;
     populateModifiersPanel(selectedWeapons);
 });
+document
+    .querySelector('form.side')
+    .addEventListener('change', function (event) {
+    target.arc = event.target.value;
+    populateModifiersPanel(selectedWeapons);
+});
 function shoot(weapons, target) {
     return weapons
         .map(function (weapon) {
@@ -337,7 +356,8 @@ function shoot(weapons, target) {
         weapon.shotsResult = weapon.shotsResult.map(function (shot) {
             var _a;
             if ((_a = shot.hit) === null || _a === void 0 ? void 0 : _a.success) {
-                return __assign(__assign({}, shot), { damage: rollToDamage(weapon.pen, target.damageValue) });
+                var modifier = toDamageModifier(weapon, target);
+                return __assign(__assign({}, shot), { damage: rollToDamage(modifier, target.damageValue) });
             }
             else {
                 return shot;
@@ -363,12 +383,12 @@ function rollToHit(modifier) {
         crit: imposSuccess
     };
 }
-function rollToDamage(pen, damageValue) {
+function rollToDamage(modifier, damageValue) {
     var dice = roll();
     return {
         roll: dice,
-        modifier: pen,
-        success: dice !== 1 && dice + pen >= damageValue,
+        modifier: modifier,
+        success: dice !== 1 && dice + modifier >= damageValue,
         crit: dice === 6 && roll() === 6
     };
 }
