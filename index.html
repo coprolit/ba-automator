@@ -20,23 +20,9 @@
       <fieldset>
         <legend>Target</legend>
         
-        <form class="damageValue">
-          <div class="radio-group">
-            <input type="radio" id="inex" name="dv" value="3">
-            <label for="inex">inexperienced inf</label>
-        
-            <input type="radio" id="reg" name="dv" value="4">
-            <label for="reg">regular inf</label>
-        
-            <input type="radio" id="vet" name="dv" value="5">
-            <label for="vet">veteran inf</label>
-            
-            <input type="radio" id="softskin" name="dv" value="6">
-            <label for="softskin">soft-skinned</label>
-            
-            <input type="radio" id="ac" name="dv" value="7">
-            <label for="ac">armoured car</label>
-          </div>
+        <form id="selectTarget" class="damageValue">
+            <label>Select target type:</label>
+          <select name="type"></select>
         </form>
 
         <form class="cover">
@@ -69,17 +55,6 @@
             <label for="shield">Gun shield / Body armour</label>
           </div>
         </span>
-
-        <form class="side" hidden>
-          <div class="radio-group">
-            <input type="radio" id="af" name="arc" value="f" checked>
-            <label for="af">Front</label>
-            <input type="radio" id="as" name="arc" value="s">
-            <label for="as">Side / top armour</label>
-            <input type="radio" id="ar" name="arc" value="r">
-            <label for="ar">Rear armour</label>
-          </div>
-        </form>
       </fieldset>
 
       <!-- Attacking unit -->

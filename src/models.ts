@@ -6,7 +6,6 @@
   building: boolean;
   shield: boolean;
   small: boolean;
-  arc: 'f' | 's' | 'r';
 }
 
 export interface Unit {
@@ -22,13 +21,19 @@ export interface Weapon {
   assault: boolean;
 }
 
-export interface Modifiers {
+export interface HitModifiers {
   range: 'c' | 's' | 'l'; // close | short | long
   // moved: boolean; // TODO instead extracted from order dice action?
   loader: boolean;
 }
+export interface DamageModifiers {
+  arc: 'f' | 's' | 'r'; // front, side/top, rear
+}
 export interface WeaponShooting extends Weapon {
-  modifiers: Modifiers;
+  modifiers: {
+    hit: HitModifiers;
+    damage: DamageModifiers;
+  }
 }
 
 export interface WeaponResult extends WeaponShooting {

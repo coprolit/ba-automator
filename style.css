@@ -30,6 +30,10 @@ fieldset > * {
   margin-block-start: 10px;
 }
 
+select, input {
+  font: inherit;
+}
+
 hr {
   color: rgba(0,0,0,.2);
 }

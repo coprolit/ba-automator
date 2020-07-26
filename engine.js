@@ -9,113 +9,137 @@ var __assign = (this && this.__assign) || function () {
     };
     return __assign.apply(this, arguments);
 };
-var rifle = {
-    name: "Rifle",
-    range: 24,
-    shots: 1,
-    pen: 0,
-    assault: false
-};
-var smg = {
-    name: "SMG",
-    range: 12,
-    shots: 2,
-    pen: 0,
-    assault: true
-};
-var atr = {
-    name: "Anti-tank Rifle",
-    range: 36,
-    shots: 1,
-    pen: 2,
-    assault: false
-};
-var assaultRifle = {
-    name: "Assault Rifle",
-    range: 18,
-    shots: 2,
-    pen: 0,
-    assault: true
-};
-var autoRifle = {
-    name: "Automatic Rifle",
-    range: 30,
-    shots: 2,
-    pen: 0,
-    assault: false
-};
-var lmg = {
-    name: "LMG",
-    range: 36,
-    shots: 4,
-    pen: 0,
-    assault: false
-};
-var mmg = {
-    name: "MMG",
-    range: 36,
-    shots: 5,
-    pen: 0,
-    assault: false
-};
-var hmg = {
-    name: "HMG",
-    range: 36,
-    shots: 3,
-    pen: 1,
-    assault: false
-};
-var panzerfaust = {
-    name: "Panzerfaust",
-    range: 12,
-    shots: 1,
-    pen: 6,
-    assault: false
-};
-var latgun = {
-    name: "Light AT gun",
-    range: 48,
-    shots: 1,
-    pen: 4,
-    assault: false
-};
-var matgun = {
-    name: "Medium AT gun",
-    range: 60,
-    shots: 1,
-    pen: 5,
-    assault: false
-};
-var hatgun = {
-    name: "Heavy AT gun",
-    range: 72,
-    shots: 1,
-    pen: 6,
-    assault: false
-};
-var unarmed = {
-    name: "Unarmed",
-    range: 0,
-    shots: 0,
-    pen: 0,
-    assault: false
-};
 var units = {};
 var weapons = [
-    rifle, smg, assaultRifle, autoRifle, lmg, mmg, hmg, atr, panzerfaust, latgun, matgun, hatgun, unarmed,
+    {
+        name: "Rifle",
+        range: 24,
+        shots: 1,
+        pen: 0,
+        assault: false
+    }, {
+        name: "SMG",
+        range: 12,
+        shots: 2,
+        pen: 0,
+        assault: true
+    }, {
+        name: "Assault Rifle",
+        range: 18,
+        shots: 2,
+        pen: 0,
+        assault: true
+    }, {
+        name: "Automatic Rifle",
+        range: 30,
+        shots: 2,
+        pen: 0,
+        assault: false
+    }, {
+        name: "LMG",
+        range: 36,
+        shots: 4,
+        pen: 0,
+        assault: false
+    }, {
+        name: "MMG",
+        range: 36,
+        shots: 5,
+        pen: 0,
+        assault: false
+    }, {
+        name: "HMG",
+        range: 36,
+        shots: 3,
+        pen: 1,
+        assault: false
+    }, {
+        name: "Anti-tank Rifle",
+        range: 36,
+        shots: 1,
+        pen: 2,
+        assault: false
+    }, {
+        name: "Panzerfaust",
+        range: 12,
+        shots: 1,
+        pen: 6,
+        assault: false
+    }, {
+        name: "Light AT gun",
+        range: 48,
+        shots: 1,
+        pen: 4,
+        assault: false
+    }, {
+        name: "Medium AT gun",
+        range: 60,
+        shots: 1,
+        pen: 5,
+        assault: false
+    }, {
+        name: "Heavy AT gun",
+        range: 72,
+        shots: 1,
+        pen: 6,
+        assault: false
+    }, {
+        name: "Unarmed",
+        range: 0,
+        shots: 0,
+        pen: 0,
+        assault: false
+    },
+];
+var targets = [
+    {
+        name: 'Inexperienced infantry',
+        value: 3
+    },
+    {
+        name: 'Regular infantry',
+        value: 4
+    },
+    {
+        name: 'Veteran infantry',
+        value: 5
+    },
+    {
+        name: 'Soft-skinned vehicle',
+        value: 6
+    },
+    {
+        name: 'Armoured car/carrier',
+        value: 7
+    },
+    {
+        name: 'Light tank',
+        value: 8
+    },
+    {
+        name: 'Medium tank',
+        value: 9
+    },
+    {
+        name: 'Heavy tank',
+        value: 10
+    },
+    {
+        name: 'Super-heavy tank',
+        value: 11
+    },
 ];
 var selectedWeapons = [];
 var moved = false;
 var pins = 0;
 var inexperienced = false;
-var target = {
+var selectedTarget = {
     cover: 'n',
     damageValue: 4,
     down: false,
     building: false,
     shield: false,
-    small: false,
-    arc: 'f'
+    small: false
 };
 var attackHistory = [];
 function toHitProbability(modifier) {
@@ -129,8 +153,8 @@ function toMissProbability(toHitProb) {
     return 1 - toHitProb;
 }
 function toDamageProbability(modifier, damageValue) {
-    var factor = 3 + (4 - damageValue) + modifier;
-    var probability = (factor > 5 ? 5 : factor) / 6;
+    var factor = 3 + -1 * (damageValue - 4) + modifier;
+    var probability = factor < 1 ? 0 : (factor > 5 ? 5 : factor) / 6;
     return probability;
 }
 function hitsProbability(shots, toHitProb) {
@@ -150,19 +174,22 @@ function missProbability(weapon, target) {
 }
 function getProbabilities(weapons, target) {
     var missProb = weapons.reduce(function (acc, weapon) {
-        return cannotHarmTarget(weapon, target) ?
-            acc :
-            acc * missProbability(weapon, target);
+        var toDamageMod = toDamageModifier(weapon, target);
+        return canHarmTarget(toDamageMod, target.damageValue) ?
+            acc * missProbability(weapon, target) :
+            acc;
     }, 1);
     var hits = weapons.reduce(function (acc, weapon) {
-        return cannotHarmTarget(weapon, target) ?
-            acc :
-            acc + hitsProbability(weapon.shots, toHitProbability(toHitModifier(weapon, moved, pins, target)));
+        var toDamageMod = toDamageModifier(weapon, target);
+        return canHarmTarget(toDamageMod, target.damageValue) ?
+            acc + hitsProbability(weapon.shots, toHitProbability(toHitModifier(weapon, moved, pins, target))) :
+            acc;
     }, 0);
     var casualties = weapons.reduce(function (acc, weapon) {
-        return cannotHarmTarget(weapon, target) ?
-            acc :
-            acc + killsProbability(weapon.shots, toHitProbability(toHitModifier(weapon, moved, pins, target)), toDamageProbability(toDamageModifier(weapon, target), target.damageValue));
+        var toDamageMod = toDamageModifier(weapon, target);
+        return canHarmTarget(toDamageMod, target.damageValue) ?
+            acc + killsProbability(weapon.shots, toHitProbability(toHitModifier(weapon, moved, pins, target)), toDamageProbability(toDamageModifier(weapon, target), target.damageValue)) :
+            acc;
     }, 0);
     return {
         pin: 1 - missProb,
@@ -185,8 +212,8 @@ function toHitModifier(weapon, moved, pins, target) {
         + (moved && !weapon.assault ? -1 : 0)
         + (-pins)
         + (inexperienced ? -1 : 0)
-        + rangeLookup[weapon.modifiers.range]
-        + (weapon.modifiers.loader ? 0 : -1)
+        + rangeLookup[weapon.modifiers.hit.range]
+        + (weapon.modifiers.hit.loader ? 0 : -1)
         + (target.down ? -2 : 0)
         + (target.small ? -1 : 0);
 }
@@ -198,12 +225,12 @@ function toDamageModifier(weapon, target) {
     };
     return (target.building ? -1 : 0)
         + (target.shield ? -1 : 0)
-        + (weapon.modifiers.range === 'l' && target.damageValue > 6 && weapon.pen > 0 ? -1 : 0)
-        + (weapon.pen > 0 ? arcLookup[target.arc] : 0)
+        + (weapon.modifiers.hit.range === 'l' && target.damageValue > 6 && weapon.pen > 0 ? -1 : 0)
+        + (weapon.pen > 0 ? arcLookup[weapon.modifiers.damage.arc] : 0)
         + weapon.pen;
 }
-function cannotHarmTarget(weapon, target) {
-    return weapon.pen === 0 && target.damageValue > 6;
+function canHarmTarget(toDamageModifiers, damageValue) {
+    return 6 + toDamageModifiers >= damageValue;
 }
 function updateStats(history) {
     var cols = history.length;
@@ -214,17 +241,24 @@ function updateStats(history) {
         hitsTotal = hitsTotal + hits_1;
     }
 }
+document.querySelector('#selectTarget select').innerHTML =
+    "<option value=\"\">Select target type...</option>\n  " + targets.map(function (target) {
+        return "<option value=\"" + target.value + "\">" + target.name + "</option>";
+    }).join('');
 document.querySelector('#addWeapon select').innerHTML =
     weapons.map(function (weapon, index) {
         return "<option value=\"" + index + "\">" + weapon.name + "</option>";
     }).join('');
 function populateModifiersPanel(weapons) {
+    console.log('weapons', weapons);
     document.querySelector('.modifiers .weapons').innerHTML = "\n    " + weapons.map(function (weapon, index) {
-        return "<div class=\"weapon\" data-index=\"" + index + "\">\n        " + weapon.name + " :\n        <span class=\"radio-group\">\n        \n          <input type=\"radio\" id=\"close\" value=\"c\" name=\"" + index + "\" " + (weapon.modifiers.range === 'c' ? 'checked' : '') + ">\n          <label for=\"close\">Point blank</label>\n      \n          <input type=\"radio\" id=\"short\" value=\"s\" name=\"" + index + "\" " + (weapon.modifiers.range === 's' ? 'checked' : '') + ">\n          <label for=\"short\">Short</label>\n      \n          <input type=\"radio\" id=\"long\" value=\"l\" name=\"" + index + "\" " + (weapon.modifiers.range === 'l' ? 'checked' : '') + ">\n          <label for=\"long\">Long</label>\n        </span>\n        " + (weapon.name === 'Anti-tank Rifle' || weapon.name === 'LMG' ?
-            "&nbsp;\n          <span>\n            <input type=\"checkbox\" id=\"loader\" name=\"" + index + "\" value=\"nl\" " + (weapon.modifiers.loader === true ? 'checked' : '') + ">\n            <label for=\"loader\">Loader</label>\n          </span>" : '') + "\n\n        <div class=\"space\"></div>\n\n        " + (cannotHarmTarget(weapon, target) ? '<span class="failure small">cannot damage</span>' :
-            weaponProbabilitiesElement(weapon, target)) + "\n\n        <input type=\"button\" value=\"x\" onclick=\"removeWeapon(this)\">\n        \n      </div>";
+        return "<div class=\"weapon\" data-index=\"" + index + "\">\n        " + weapon.name + " :\n        <span class=\"radio-group\">\n        \n          <input type=\"radio\" id=\"close\" value=\"c\" name=\"" + index + "\" " + (weapon.modifiers.hit.range === 'c' ? 'checked' : '') + ">\n          <label for=\"close\">Point blank</label>\n      \n          <input type=\"radio\" id=\"short\" value=\"s\" name=\"" + index + "\" " + (weapon.modifiers.hit.range === 's' ? 'checked' : '') + ">\n          <label for=\"short\">Short</label>\n      \n          <input type=\"radio\" id=\"long\" value=\"l\" name=\"" + index + "\" " + (weapon.modifiers.hit.range === 'l' ? 'checked' : '') + ">\n          <label for=\"long\">Long</label>\n        </span>\n        " + (weapon.name === 'Anti-tank Rifle' || weapon.name === 'LMG' ?
+            "&nbsp;\n          <span>\n            <input type=\"checkbox\" id=\"loader\" name=\"" + index + "\" value=\"nl\" " + (weapon.modifiers.hit.loader === true ? 'checked' : '') + ">\n            <label for=\"loader\">Loader</label>\n          </span>" : '') + "\n        " + (weapon.pen ?
+            "<form class=\"side\" hidden>\n          <div class=\"radio-group\">\n            <input type=\"radio\" id=\"af\" name=\"arc\" value=\"f\" checked>\n            <label for=\"af\">Front</label>\n            <input type=\"radio\" id=\"as\" name=\"arc\" value=\"s\">\n            <label for=\"as\">Side / top armour</label>\n            <input type=\"radio\" id=\"ar\" name=\"arc\" value=\"r\">\n            <label for=\"ar\">Rear armour</label>\n          </div>\n        </form>" : '') + "\n\n        <div class=\"space\"></div>\n\n        " + (canHarmTarget(toDamageModifier(weapon, selectedTarget), selectedTarget.damageValue) ?
+            weaponProbabilitiesElement(weapon, selectedTarget) :
+            '<span class="failure small">cannot damage</span>') + "\n\n        <input type=\"button\" value=\"x\" onclick=\"removeWeapon(this)\">\n        \n      </div>";
     }).join('') + "\n  ";
-    var totalProb = getProbabilities(weapons, target);
+    var totalProb = getProbabilities(weapons, selectedTarget);
     document.querySelector('.probabilities .pinning').innerHTML = (totalProb.pin * 100).toFixed(4) + "%";
     document.querySelector('.probabilities .hits').innerHTML = totalProb.hits.toFixed(2);
     document.querySelector('.probabilities .casualties').innerHTML = totalProb.casualties.toFixed(2);
@@ -235,8 +269,20 @@ function weaponProbabilitiesElement(weapon, target) {
     var hitsProb = hitsProbability(weapon.shots, toHitProb);
     var killsProb = killsProbability(weapon.shots, toHitProb, toDamageProb);
     var toPinProb = (1 - missProbability(weapon, target));
-    return "<span class=\"small\">\n    <div class=\"box\">\n      <div class=\"row highlight light\">\n        <span class=\"multiplier\">" + weapon.shots + " *</span>\n        <span class=\"column\">\n          <span>To hit " + (toHitProb * 100).toFixed(1) + "%</span>\n          <span>To damage " + (toDamageProb * 100).toFixed(1) + "%</span>\n        </span>\n      </div>\n    </div>\n    <span class=\"highlight light\">To pin " + (toPinProb * 100).toFixed(2) + "%</span>\n    :\n    <span class=\"highlight\">Hits " + hitsProb.toFixed(2) + "</span>\n    &rarr;\n    <span class=\"highlight\">Casualties " + killsProb.toFixed(2) + "</span>\n  </span>";
+    return "<span class=\"small\">\n    <div class=\"box\">\n      <div class=\"row highlight light\">\n        <span class=\"multiplier\">" + weapon.shots + " *</span>\n        <span class=\"column\">\n          <span>To hit " + (toHitProb * 100).toFixed(1) + "%</span>\n          <span>To damage " + (toDamageProb * 100).toFixed(1) + "%</span>\n        </span>\n      </div>\n    </div>\n    <span class=\"highlight light\">To pin " + (toPinProb * 100).toFixed(2) + "%</span>\n    :\n    <span class=\"highlight\">Hits " + hitsProb.toFixed(2) + "</span>\n    &rarr;\n    <span class=\"highlight\">" + (target.damageValue > 5 ? 'Penetrations' : 'Casualties') + " " + killsProb.toFixed(2) + "</span>\n  </span>";
 }
+var formTargets = document.querySelector('#selectTarget');
+formTargets.addEventListener('change', function (event) {
+    event.preventDefault();
+    selectedTarget.damageValue = parseInt(event.target.value);
+    if (selectedTarget.damageValue < 6) {
+        document.querySelector('.inf').removeAttribute('hidden');
+    }
+    else {
+        document.querySelector('.inf').setAttribute('hidden', '');
+    }
+    populateModifiersPanel(selectedWeapons);
+});
 var formWeapons = document.querySelector('#addWeapon');
 formWeapons.addEventListener('submit', function (event) {
     event.preventDefault();
@@ -245,8 +291,8 @@ formWeapons.addEventListener('submit', function (event) {
     var selectedWeaponType = weapons[Number(formdata.get('type'))];
     for (var i = 0; i < amount; i++) {
         selectedWeapons.push(__assign(__assign({}, selectedWeaponType), { modifiers: {
-                range: 's',
-                loader: true
+                hit: { loader: true, range: 's' },
+                damage: { arc: 'f' }
             } }));
     }
     selectedWeapons.sort(function (a, b) {
@@ -271,10 +317,12 @@ document
     var targetEl = event.target;
     var value = targetEl.value;
     value === 's' || value === 'l' || value === 'c' ?
-        selectedWeapons[parseInt(targetEl.name)].modifiers.range = targetEl.value :
+        selectedWeapons[parseInt(targetEl.name)].modifiers.hit.range = targetEl.value :
         value === 'nl' ?
-            selectedWeapons[parseInt(targetEl.name)].modifiers.loader = targetEl.checked
-            : void 0;
+            selectedWeapons[parseInt(targetEl.name)].modifiers.hit.loader = targetEl.checked :
+            value === '' ?
+                selectedWeapons[parseInt(targetEl.name)].modifiers.hit.loader = targetEl.checked :
+                void 0;
     populateModifiersPanel(selectedWeapons);
 });
 var checkboxAdvancing = document.querySelector('input[id="advancing"]');
@@ -296,51 +344,27 @@ document
 document
     .querySelector('form.cover')
     .addEventListener('change', function (event) {
-    target.cover = event.target.value;
-    populateModifiersPanel(selectedWeapons);
-});
-document
-    .querySelector('form.damageValue')
-    .addEventListener('change', function (event) {
-    target.damageValue = parseInt(event.target.value);
-    if (target.damageValue < 6) {
-        document.querySelector('.inf').removeAttribute('hidden');
-    }
-    else {
-        document.querySelector('.inf').setAttribute('hidden', '');
-    }
-    if (target.damageValue > 6) {
-        document.querySelector('.side').removeAttribute('hidden');
-    }
-    else {
-        document.querySelector('.side').setAttribute('hidden', '');
-    }
+    selectedTarget.cover = event.target.value;
     populateModifiersPanel(selectedWeapons);
 });
 var checkboxDown = document.querySelector('input[id="down"]');
 checkboxDown.addEventListener('change', function () {
-    target.down = checkboxDown.checked ? true : false;
+    selectedTarget.down = checkboxDown.checked ? true : false;
     populateModifiersPanel(selectedWeapons);
 });
 var checkboxInBuilding = document.querySelector('input[id="building"]');
 checkboxInBuilding.addEventListener('change', function () {
-    target.building = checkboxInBuilding.checked ? true : false;
+    selectedTarget.building = checkboxInBuilding.checked ? true : false;
     populateModifiersPanel(selectedWeapons);
 });
 var checkboxShield = document.querySelector('input[id="shield"]');
 checkboxShield.addEventListener('change', function () {
-    target.shield = checkboxShield.checked ? true : false;
+    selectedTarget.shield = checkboxShield.checked ? true : false;
     populateModifiersPanel(selectedWeapons);
 });
 var checkboxSmall = document.querySelector('input[id="small"]');
 checkboxSmall.addEventListener('change', function () {
-    target.small = checkboxSmall.checked ? true : false;
-    populateModifiersPanel(selectedWeapons);
-});
-document
-    .querySelector('form.side')
-    .addEventListener('change', function (event) {
-    target.arc = event.target.value;
+    selectedTarget.small = checkboxSmall.checked ? true : false;
     populateModifiersPanel(selectedWeapons);
 });
 function shoot(weapons, target) {
@@ -348,9 +372,10 @@ function shoot(weapons, target) {
         .map(function (weapon) {
         var shots = getShots(weapon);
         var modifier = toHitModifier(weapon, moved, pins, target);
-        return __assign(__assign({}, weapon), { shotsResult: cannotHarmTarget(weapon, target) ?
-                [] :
-                shots.map(function () { return { hit: rollToHit(modifier) }; }) });
+        var damageModifier = toDamageModifier(weapon, target);
+        return __assign(__assign({}, weapon), { shotsResult: canHarmTarget(damageModifier, target.damageValue) ?
+                shots.map(function () { return { hit: rollToHit(modifier) }; }) :
+                [] });
     })
         .map(function (weapon) {
         weapon.shotsResult = weapon.shotsResult.map(function (shot) {
@@ -417,7 +442,7 @@ function crits(weaponsResult) {
         .length;
 }
 function attack() {
-    var results = shoot(selectedWeapons, target);
+    var results = shoot(selectedWeapons, selectedTarget);
     attackHistory.push(results);
     displayShootingResult(results, this.target);
     updateStats(attackHistory);

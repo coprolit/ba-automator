@@ -1,103 +1,126 @@
 import {Score, Shot, Target, Weapon, WeaponResult, WeaponShooting} from './models';
 
-const rifle = {
-  name: "Rifle",
-  range: 24,
-  shots: 1,
-  pen: 0,
-  assault: false
-}
-const smg = {
-  name: "SMG",
-  range: 12,
-  shots: 2,
-  pen: 0,
-  assault: true
-}
-const atr = {
-  name: "Anti-tank Rifle",
-  range: 36,
-  shots: 1,
-  pen: 2,
-  assault: false
-}
-const assaultRifle = {
-  name: "Assault Rifle",
-  range: 18,
-  shots: 2,
-  pen: 0,
-  assault: true
-}
-const autoRifle = {
-  name: "Automatic Rifle",
-  range: 30,
-  shots: 2,
-  pen: 0,
-  assault: false
-}
-const lmg = {
-  name: "LMG",
-  range: 36,
-  shots: 4,
-  pen: 0,
-  assault: false
-}
-const mmg = {
-  name: "MMG",
-  range: 36,
-  shots: 5,
-  pen: 0,
-  assault: false
-}
-const hmg = {
-  name: "HMG",
-  range: 36,
-  shots: 3,
-  pen: 1,
-  assault: false
-}
-const panzerfaust = {
-  name: "Panzerfaust",
-  range: 12,
-  shots: 1,
-  pen: 6,
-  assault: false
-}
-const latgun = {
-  name: "Light AT gun",
-  range: 48,
-  shots: 1,
-  pen: 4,
-  assault: false
-}
-const matgun = {
-  name: "Medium AT gun",
-  range: 60,
-  shots: 1,
-  pen: 5,
-  assault: false
-}
-const hatgun = {
-  name: "Heavy AT gun",
-  range: 72,
-  shots: 1,
-  pen: 6,
-  assault: false
-}
-const unarmed = {
-  name: "Unarmed",
-  range: 0,
-  shots: 0,
-  pen: 0,
-  assault: false
-}
-
-const units = {
-
-} 
+const units = {} 
 
 const weapons: Weapon[] = [
-  rifle, smg, assaultRifle, autoRifle, lmg, mmg, hmg, atr, panzerfaust, latgun, matgun, hatgun, unarmed, 
+  {
+    name: "Rifle",
+    range: 24,
+    shots: 1,
+    pen: 0,
+    assault: false
+  }, {
+    name: "SMG",
+    range: 12,
+    shots: 2,
+    pen: 0,
+    assault: true
+  }, {
+    name: "Assault Rifle",
+    range: 18,
+    shots: 2,
+    pen: 0,
+    assault: true
+  }, {
+    name: "Automatic Rifle",
+    range: 30,
+    shots: 2,
+    pen: 0,
+    assault: false
+  }, {
+    name: "LMG",
+    range: 36,
+    shots: 4,
+    pen: 0,
+    assault: false
+  }, {
+    name: "MMG",
+    range: 36,
+    shots: 5,
+    pen: 0,
+    assault: false
+  }, {
+    name: "HMG",
+    range: 36,
+    shots: 3,
+    pen: 1,
+    assault: false
+  }, {
+    name: "Anti-tank Rifle",
+    range: 36,
+    shots: 1,
+    pen: 2,
+    assault: false
+  }, {
+    name: "Panzerfaust",
+    range: 12,
+    shots: 1,
+    pen: 6,
+    assault: false
+  }, {
+    name: "Light AT gun",
+    range: 48,
+    shots: 1,
+    pen: 4,
+    assault: false
+  }, {
+    name: "Medium AT gun",
+    range: 60,
+    shots: 1,
+    pen: 5,
+    assault: false
+  }, {
+    name: "Heavy AT gun",
+    range: 72,
+    shots: 1,
+    pen: 6,
+    assault: false
+  }, {
+    name: "Unarmed",
+    range: 0,
+    shots: 0,
+    pen: 0,
+    assault: false
+  }, 
+]
+
+const targets: {name: string, value: number}[] = [
+  {
+    name: 'Inexperienced infantry',
+    value: 3
+  },
+  {
+    name: 'Regular infantry',
+    value: 4
+  },
+  {
+    name: 'Veteran infantry',
+    value: 5
+  },
+  {
+    name: 'Soft-skinned vehicle',
+    value: 6
+  },
+  {
+    name: 'Armoured car/carrier',
+    value: 7
+  },
+  {
+    name: 'Light tank',
+    value: 8
+  },
+  {
+    name: 'Medium tank',
+    value: 9
+  },
+  {
+    name: 'Heavy tank',
+    value: 10
+  },
+  {
+    name: 'Super-heavy tank',
+    value: 11
+  },
 ]
 
 // Dynamic state:
@@ -106,14 +129,13 @@ let moved: boolean = false;
 let pins: number = 0;
 let inexperienced: boolean = false;
 
-const target: Target = {
+const selectedTarget: Target = {
   cover: 'n',
   damageValue: 4,
   down: false,
   building: false,
   shield: false,
-  small: false,
-  arc: 'f'
+  small: false
 }
 
 const attackHistory: WeaponResult[][] = [];
@@ -139,10 +161,11 @@ function toMissProbability(toHitProb: number) {
 }
 
 function toDamageProbability(modifier: number, damageValue: number) {
-  const factor = 3 + (4 - damageValue) + modifier;
+  const factor = 3 + -1 * (damageValue - 4) + modifier;
   
-  // a roll of 1 always fails:
-  const probability = (factor > 5 ? 5 : factor) / 6;
+  // negative factor == cannot harm / no chance
+  // a roll of 1 always fails
+  const probability = factor < 1 ? 0 : (factor > 5 ? 5 : factor) / 6;
 
   return probability;
 }
@@ -170,33 +193,39 @@ function getProbabilities(weapons: WeaponShooting[], target: Target) {
   // shooting weapons' accumulated probability of missing:
   // (chance to pin = 100% - chance to miss)  
   const missProb = weapons.reduce((acc, weapon) => {
-    return cannotHarmTarget(weapon, target) ?
+    const toDamageMod = toDamageModifier(weapon, target);
+
+    return canHarmTarget(toDamageMod, target.damageValue) ?
+    // add probability:
+    acc * missProbability(weapon, target) :
     // if weapon cannot harm target, skip:
-    acc :
-    // else add probability:
-    acc * missProbability(weapon, target)
+    acc;
   }, 1);
 
   // shooting weapons' accumulated probability of hitting:
   const hits = weapons.reduce((acc, weapon) => {
-    return cannotHarmTarget(weapon, target) ?
+    const toDamageMod = toDamageModifier(weapon, target);
+
+    return canHarmTarget(toDamageMod, target.damageValue) ?
+      // add probability:
+      acc + hitsProbability(weapon.shots, toHitProbability(toHitModifier(weapon, moved, pins, target))) :
       // if weapon cannot harm target, skip:
-      acc :
-      // else add probability:
-      acc + hitsProbability(weapon.shots, toHitProbability(toHitModifier(weapon, moved, pins, target)))
+      acc;
   }, 0);
 
   // shooting weapons' accumulated probability of afflicting casualties:
   const casualties = weapons.reduce((acc, weapon) => {
-    return cannotHarmTarget(weapon, target) ?
-      // if weapon cannot harm target, skip:
-      acc :
-      // else add probability:
+    const toDamageMod = toDamageModifier(weapon, target);
+
+    return canHarmTarget(toDamageMod, target.damageValue) ?
+      // add probability:
       acc + killsProbability(
         weapon.shots,
         toHitProbability(toHitModifier(weapon, moved, pins, target)),
         toDamageProbability(toDamageModifier(weapon, target), target.damageValue)
-      );
+      ) :
+      // if weapon cannot harm target, skip:
+      acc;
   }, 0);
   
   return {
@@ -224,8 +253,8 @@ function toHitModifier(weapon: WeaponShooting, moved: Boolean, pins: number, tar
     + (moved && !weapon.assault ? -1 : 0)
     + (-pins)
     + (inexperienced ? -1 : 0)
-    + rangeLookup[weapon.modifiers.range]
-    + (weapon.modifiers.loader ? 0 : -1)
+    + rangeLookup[weapon.modifiers.hit.range]
+    + (weapon.modifiers.hit.loader ? 0 : -1)
     + (target.down ? -2 : 0)
     + (target.small ? -1 : 0);
 }
@@ -240,13 +269,14 @@ function toDamageModifier(weapon: WeaponShooting, target: Target) {
   return (target.building ? -1 : 0) // except for flamethrowers and HE
     + (target.shield ? -1 : 0)
     // long range for Heavy Weapon Against Armoured Targets:
-    + (weapon.modifiers.range === 'l' && target.damageValue > 6 && weapon.pen > 0 ? -1 : 0)
-    + (weapon.pen > 0 ? arcLookup[target.arc] : 0)
+    + (weapon.modifiers.hit.range === 'l' && target.damageValue > 6 && weapon.pen > 0 ? -1 : 0)
+    // shooting arc against Armoured Targets:
+    + (weapon.pen > 0 ? arcLookup[weapon.modifiers.damage.arc] : 0)
     + weapon.pen;
 }
 
-function cannotHarmTarget(weapon: WeaponShooting, target: Target) {
-  return weapon.pen === 0 && target.damageValue > 6
+function canHarmTarget(toDamageModifiers: number, damageValue: number) {
+  return 6 + toDamageModifiers >= damageValue
 }
 
 // UI:
@@ -263,13 +293,21 @@ function updateStats(history: WeaponResult[][]) {
   }
 }
 
+// populate target type selector:
+document.querySelector('#selectTarget select').innerHTML =
+  `<option value="">Select target type...</option>
+  ${targets.map(target =>
+    `<option value="${target.value}">${target.name}</option>`
+  ).join('')}`;
+
 // populate weapons selector:
 document.querySelector('#addWeapon select').innerHTML =
   weapons.map((weapon, index) =>
     `<option value="${index}">${weapon.name}</option>`
   ).join('');
 
-function populateModifiersPanel(weapons: WeaponShooting[]) {  
+function populateModifiersPanel(weapons: WeaponShooting[]) {
+  console.log('weapons', weapons)
   // display selected weapons for modifier adjustments:
   document.querySelector('.modifiers .weapons').innerHTML = `
     ${weapons.map((weapon, index) => {
@@ -277,27 +315,41 @@ function populateModifiersPanel(weapons: WeaponShooting[]) {
         ${weapon.name} :
         <span class="radio-group">
         
-          <input type="radio" id="close" value="c" name="${index}" ${weapon.modifiers.range === 'c' ? 'checked' : ''}>
+          <input type="radio" id="close" value="c" name="${index}" ${weapon.modifiers.hit.range === 'c' ? 'checked' : ''}>
           <label for="close">Point blank</label>
       
-          <input type="radio" id="short" value="s" name="${index}" ${weapon.modifiers.range === 's' ? 'checked' : ''}>
+          <input type="radio" id="short" value="s" name="${index}" ${weapon.modifiers.hit.range === 's' ? 'checked' : ''}>
           <label for="short">Short</label>
       
-          <input type="radio" id="long" value="l" name="${index}" ${weapon.modifiers.range === 'l' ? 'checked' : ''}>
+          <input type="radio" id="long" value="l" name="${index}" ${weapon.modifiers.hit.range === 'l' ? 'checked' : ''}>
           <label for="long">Long</label>
         </span>
         ${weapon.name === 'Anti-tank Rifle' || weapon.name === 'LMG' ?
           `&nbsp;
           <span>
-            <input type="checkbox" id="loader" name="${index}" value="nl" ${weapon.modifiers.loader === true ? 'checked' : ''}>
+            <input type="checkbox" id="loader" name="${index}" value="nl" ${weapon.modifiers.hit.loader === true ? 'checked' : ''}>
             <label for="loader">Loader</label>
           </span>` : ''
+        }
+        ${weapon.pen ?
+          `<form class="side" hidden>
+          <div class="radio-group">
+            <input type="radio" id="af" name="arc" value="f" checked>
+            <label for="af">Front</label>
+            <input type="radio" id="as" name="arc" value="s">
+            <label for="as">Side / top armour</label>
+            <input type="radio" id="ar" name="arc" value="r">
+            <label for="ar">Rear armour</label>
+          </div>
+        </form>` : ''
+
         }
 
         <div class="space"></div>
 
-        ${cannotHarmTarget(weapon, target) ? '<span class="failure small">cannot damage</span>' :
-          weaponProbabilitiesElement(weapon, target)
+        ${canHarmTarget(toDamageModifier(weapon, selectedTarget), selectedTarget.damageValue) ?
+          weaponProbabilitiesElement(weapon, selectedTarget) :
+          '<span class="failure small">cannot damage</span>'
         }
 
         <input type="button" value="x" onclick="removeWeapon(this)">
@@ -306,7 +358,7 @@ function populateModifiersPanel(weapons: WeaponShooting[]) {
       }).join('')}
   `;
 
-  const totalProb = getProbabilities(weapons, target);
+  const totalProb = getProbabilities(weapons, selectedTarget);
   document.querySelector('.probabilities .pinning').innerHTML = `${(totalProb.pin * 100).toFixed(4)}%`;
   document.querySelector('.probabilities .hits').innerHTML = totalProb.hits.toFixed(2);
   document.querySelector('.probabilities .casualties').innerHTML = totalProb.casualties.toFixed(2);
@@ -333,11 +385,33 @@ function weaponProbabilitiesElement(weapon: WeaponShooting, target: Target) {
     :
     <span class="highlight">Hits ${hitsProb.toFixed(2)}</span>
     &rarr;
-    <span class="highlight">Casualties ${killsProb.toFixed(2)}</span>
+    <span class="highlight">${target.damageValue > 5 ? 'Penetrations' : 'Casualties'} ${killsProb.toFixed(2)}</span>
   </span>`;
 }
 
 // FORM HANDLERS:
+
+// Target type selection:
+const formTargets: HTMLFormElement = document.querySelector('#selectTarget');
+formTargets.addEventListener('change', (event: Event) => {
+  event.preventDefault();
+
+  selectedTarget.damageValue = parseInt((<HTMLInputElement>event.target).value);
+    
+    if(selectedTarget.damageValue < 6) {
+      document.querySelector('.inf').removeAttribute('hidden');
+    } else {
+      document.querySelector('.inf').setAttribute('hidden', '');
+    }
+    /* if(selectedTarget.damageValue > 6) {
+      document.querySelector('.side').removeAttribute('hidden');
+    } else {
+      document.querySelector('.side').setAttribute('hidden', '');
+    } */
+  
+  // display in panel:
+  populateModifiersPanel(selectedWeapons);
+});
 
 // Add weapon(s) to selection:
 const formWeapons: HTMLFormElement = document.querySelector('#addWeapon');
@@ -353,8 +427,8 @@ formWeapons.addEventListener('submit', (event: Event) => {
     selectedWeapons.push({
       ...selectedWeaponType,
       modifiers: {
-        range: 's',
-        loader: true
+        hit: { loader: true, range: 's' },
+        damage: { arc: 'f' }
       }
     })
   }
@@ -391,11 +465,14 @@ document
 
     value === 's' || value === 'l' || value === 'c' ? 
       // update range modifier:
-      selectedWeapons[parseInt(targetEl.name)].modifiers.range = targetEl.value as 's'|'l'|'c' :
+      selectedWeapons[parseInt(targetEl.name)].modifiers.hit.range = targetEl.value as 's'|'l'|'c' :
     value === 'nl' ?
       // update missing loader modifier:
-      selectedWeapons[parseInt(targetEl.name)].modifiers.loader = targetEl.checked
-    : void 0;
+      selectedWeapons[parseInt(targetEl.name)].modifiers.hit.loader = targetEl.checked :
+    value === '' ?
+      // update targeted Armoured vehicle arc:
+      selectedWeapons[parseInt(targetEl.name)].modifiers.hit.loader = targetEl.checked :
+    void 0;
 
     populateModifiersPanel(selectedWeapons);
   })
@@ -432,27 +509,7 @@ document
 document
   .querySelector('form.cover')
   .addEventListener('change', (event: Event) => {
-    target.cover = (<HTMLInputElement>event.target).value as Target['cover'];
-
-    populateModifiersPanel(selectedWeapons);
-  });
-
-// - Damage value / target type:
-document
-  .querySelector('form.damageValue')
-  .addEventListener('change', (event: Event) => {
-    target.damageValue = parseInt((<HTMLInputElement>event.target).value);
-    
-    if(target.damageValue < 6) {
-      document.querySelector('.inf').removeAttribute('hidden');
-    } else {
-      document.querySelector('.inf').setAttribute('hidden', '');
-    }
-    if(target.damageValue > 6) {
-      document.querySelector('.side').removeAttribute('hidden');
-    } else {
-      document.querySelector('.side').setAttribute('hidden', '');
-    }
+    selectedTarget.cover = (<HTMLInputElement>event.target).value as Target['cover'];
 
     populateModifiersPanel(selectedWeapons);
   });
@@ -461,7 +518,7 @@ document
 const checkboxDown: HTMLInputElement = document.querySelector('input[id="down"]');
 checkboxDown.addEventListener('change', () => {
   // set selected unit:
-  target.down = checkboxDown.checked ? true : false;
+  selectedTarget.down = checkboxDown.checked ? true : false;
 
   populateModifiersPanel(selectedWeapons);
 });
@@ -470,7 +527,7 @@ checkboxDown.addEventListener('change', () => {
 const checkboxInBuilding: HTMLInputElement = document.querySelector('input[id="building"]');
 checkboxInBuilding.addEventListener('change', () => {
   // set selected unit:
-  target.building = checkboxInBuilding.checked ? true : false;
+  selectedTarget.building = checkboxInBuilding.checked ? true : false;
 
   populateModifiersPanel(selectedWeapons);
 });
@@ -479,7 +536,7 @@ checkboxInBuilding.addEventListener('change', () => {
 const checkboxShield: HTMLInputElement = document.querySelector('input[id="shield"]');
 checkboxShield.addEventListener('change', () => {
   // set selected unit:
-  target.shield = checkboxShield.checked ? true : false;
+  selectedTarget.shield = checkboxShield.checked ? true : false;
 
   populateModifiersPanel(selectedWeapons);
 });
@@ -488,19 +545,19 @@ checkboxShield.addEventListener('change', () => {
 const checkboxSmall: HTMLInputElement = document.querySelector('input[id="small"]');
 checkboxSmall.addEventListener('change', () => {
   // set selected unit:
-  target.small = checkboxSmall.checked ? true : false;
+  selectedTarget.small = checkboxSmall.checked ? true : false;
 
   populateModifiersPanel(selectedWeapons);
 });
 
 // - Armour side:
-document
+/* document
   .querySelector('form.side')
   .addEventListener('change', (event: Event) => {
-    target.arc = (<HTMLInputElement>event.target).value as Target['arc'];
+    selectedTarget.arc = (<HTMLInputElement>event.target).value as Target['arc'];
 
     populateModifiersPanel(selectedWeapons);
-  });
+  }); */
 
 // Combat Simulator:
 function shoot(weapons: WeaponShooting[], target: Target): WeaponResult[] {
@@ -510,13 +567,14 @@ function shoot(weapons: WeaponShooting[], target: Target): WeaponResult[] {
     .map((weapon: WeaponShooting) => {
       const shots: Shot[] = getShots(weapon);
       const modifier = toHitModifier(weapon, moved, pins, target);
+      const damageModifier = toDamageModifier(weapon, target);
 
       return {
         ...weapon,
         // resolve and add hit results for each shot:
-        shotsResult: cannotHarmTarget(weapon, target) ?
-          [] :
-          shots.map(() => { return { hit: rollToHit(modifier)} })
+        shotsResult: canHarmTarget(damageModifier, target.damageValue) ?
+          shots.map(() => { return { hit: rollToHit(modifier)} }) :
+          []
       };
     })
     .map((weapon: WeaponResult) => {
@@ -628,7 +686,7 @@ function crits(weaponsResult: WeaponResult[]): number {
 }
 
 function attack() {
-  const results: WeaponResult[] = shoot(selectedWeapons, target);
+  const results: WeaponResult[] = shoot(selectedWeapons, selectedTarget);
   
   attackHistory.push(results);
   
