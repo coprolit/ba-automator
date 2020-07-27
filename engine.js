@@ -250,11 +250,10 @@ document.querySelector('#addWeapon select').innerHTML =
         return "<option value=\"" + index + "\">" + weapon.name + "</option>";
     }).join('');
 function populateModifiersPanel(weapons) {
-    console.log('weapons', weapons);
     document.querySelector('.modifiers .weapons').innerHTML = "\n    " + weapons.map(function (weapon, index) {
-        return "<div class=\"weapon\" data-index=\"" + index + "\">\n        " + weapon.name + " :\n        <span class=\"radio-group\">\n        \n          <input type=\"radio\" id=\"close\" value=\"c\" name=\"" + index + "\" " + (weapon.modifiers.hit.range === 'c' ? 'checked' : '') + ">\n          <label for=\"close\">Point blank</label>\n      \n          <input type=\"radio\" id=\"short\" value=\"s\" name=\"" + index + "\" " + (weapon.modifiers.hit.range === 's' ? 'checked' : '') + ">\n          <label for=\"short\">Short</label>\n      \n          <input type=\"radio\" id=\"long\" value=\"l\" name=\"" + index + "\" " + (weapon.modifiers.hit.range === 'l' ? 'checked' : '') + ">\n          <label for=\"long\">Long</label>\n        </span>\n        " + (weapon.name === 'Anti-tank Rifle' || weapon.name === 'LMG' ?
-            "&nbsp;\n          <span>\n            <input type=\"checkbox\" id=\"loader\" name=\"" + index + "\" value=\"nl\" " + (weapon.modifiers.hit.loader === true ? 'checked' : '') + ">\n            <label for=\"loader\">Loader</label>\n          </span>" : '') + "\n        " + (weapon.pen ?
-            "<form class=\"side\" hidden>\n          <div class=\"radio-group\">\n            <input type=\"radio\" id=\"af\" name=\"arc\" value=\"f\" checked>\n            <label for=\"af\">Front</label>\n            <input type=\"radio\" id=\"as\" name=\"arc\" value=\"s\">\n            <label for=\"as\">Side / top armour</label>\n            <input type=\"radio\" id=\"ar\" name=\"arc\" value=\"r\">\n            <label for=\"ar\">Rear armour</label>\n          </div>\n        </form>" : '') + "\n\n        <div class=\"space\"></div>\n\n        " + (canHarmTarget(toDamageModifier(weapon, selectedTarget), selectedTarget.damageValue) ?
+        return "<div class=\"weapon\" data-index=\"" + index + "\">\n        " + weapon.name + " :\n        \n        <form>\n          <label class=\"small\">Range</label>\n          <select name=\"" + index + "\">\n            <option value=\"c\" " + (weapon.modifiers.hit.range === 'c' ? 'selected' : '') + ">Point blank</option>\n            <option value=\"s\" " + (weapon.modifiers.hit.range === 's' ? 'selected' : '') + ">Short</option>\n            <option value=\"l\" " + (weapon.modifiers.hit.range === 'l' ? 'selected' : '') + ">Long</option>\n          </select>\n        </form>\n        \n        " + (weapon.name === 'Anti-tank Rifle' || weapon.name === 'LMG' ?
+            "&nbsp;\n          <span>\n            <input type=\"checkbox\" id=\"loader\" name=\"" + index + "\" value=\"nl\" " + (weapon.modifiers.hit.loader === true ? 'checked' : '') + ">\n            <label for=\"loader\">Loader</label>\n          </span>" : '') + "\n        " + (weapon.pen && selectedTarget.damageValue > 6 ?
+            "<form class=\"side\">\n            <label class=\"small\">Arc</label>\n            <select name=\"" + index + "\">\n              <option value=\"af\" " + (weapon.modifiers.damage.arc === 'f' ? 'selected' : '') + ">Front</option>\n              <option value=\"as\" " + (weapon.modifiers.damage.arc === 's' ? 'selected' : '') + ">Side/top</option>\n              <option value=\"ar\" " + (weapon.modifiers.damage.arc === 'r' ? 'selected' : '') + ">Rear</option>\n            </select>\n          </form>" : '') + "\n\n        <div class=\"space\"></div>\n\n        " + (canHarmTarget(toDamageModifier(weapon, selectedTarget), selectedTarget.damageValue) ?
             weaponProbabilitiesElement(weapon, selectedTarget) :
             '<span class="failure small">cannot damage</span>') + "\n\n        <input type=\"button\" value=\"x\" onclick=\"removeWeapon(this)\">\n        \n      </div>";
     }).join('') + "\n  ";
@@ -316,12 +315,13 @@ document
     .addEventListener('change', function (event) {
     var targetEl = event.target;
     var value = targetEl.value;
+    console.log(targetEl.value.slice(1));
     value === 's' || value === 'l' || value === 'c' ?
         selectedWeapons[parseInt(targetEl.name)].modifiers.hit.range = targetEl.value :
         value === 'nl' ?
             selectedWeapons[parseInt(targetEl.name)].modifiers.hit.loader = targetEl.checked :
-            value === '' ?
-                selectedWeapons[parseInt(targetEl.name)].modifiers.hit.loader = targetEl.checked :
+            value === 'af' || value === 'as' || value === 'ar' ?
+                selectedWeapons[parseInt(targetEl.name)].modifiers.damage.arc = targetEl.value.slice(1) :
                 void 0;
     populateModifiersPanel(selectedWeapons);
 });

@@ -307,23 +307,21 @@ document.querySelector('#addWeapon select').innerHTML =
   ).join('');
 
 function populateModifiersPanel(weapons: WeaponShooting[]) {
-  console.log('weapons', weapons)
   // display selected weapons for modifier adjustments:
   document.querySelector('.modifiers .weapons').innerHTML = `
     ${weapons.map((weapon, index) => {
       return `<div class="weapon" data-index="${index}">
         ${weapon.name} :
-        <span class="radio-group">
         
-          <input type="radio" id="close" value="c" name="${index}" ${weapon.modifiers.hit.range === 'c' ? 'checked' : ''}>
-          <label for="close">Point blank</label>
-      
-          <input type="radio" id="short" value="s" name="${index}" ${weapon.modifiers.hit.range === 's' ? 'checked' : ''}>
-          <label for="short">Short</label>
-      
-          <input type="radio" id="long" value="l" name="${index}" ${weapon.modifiers.hit.range === 'l' ? 'checked' : ''}>
-          <label for="long">Long</label>
-        </span>
+        <form>
+          <label class="small">Range</label>
+          <select name="${index}">
+            <option value="c" ${weapon.modifiers.hit.range === 'c' ? 'selected' : ''}>Point blank</option>
+            <option value="s" ${weapon.modifiers.hit.range === 's' ? 'selected' : ''}>Short</option>
+            <option value="l" ${weapon.modifiers.hit.range === 'l' ? 'selected' : ''}>Long</option>
+          </select>
+        </form>
+        
         ${weapon.name === 'Anti-tank Rifle' || weapon.name === 'LMG' ?
           `&nbsp;
           <span>
@@ -331,18 +329,15 @@ function populateModifiersPanel(weapons: WeaponShooting[]) {
             <label for="loader">Loader</label>
           </span>` : ''
         }
-        ${weapon.pen ?
-          `<form class="side" hidden>
-          <div class="radio-group">
-            <input type="radio" id="af" name="arc" value="f" checked>
-            <label for="af">Front</label>
-            <input type="radio" id="as" name="arc" value="s">
-            <label for="as">Side / top armour</label>
-            <input type="radio" id="ar" name="arc" value="r">
-            <label for="ar">Rear armour</label>
-          </div>
-        </form>` : ''
-
+        ${weapon.pen && selectedTarget.damageValue > 6?
+          `<form class="side">
+            <label class="small">Arc</label>
+            <select name="${index}">
+              <option value="af" ${weapon.modifiers.damage.arc === 'f' ? 'selected' : ''}>Front</option>
+              <option value="as" ${weapon.modifiers.damage.arc === 's' ? 'selected' : ''}>Side/top</option>
+              <option value="ar" ${weapon.modifiers.damage.arc === 'r' ? 'selected' : ''}>Rear</option>
+            </select>
+          </form>` : ''
         }
 
         <div class="space"></div>
@@ -403,11 +398,6 @@ formTargets.addEventListener('change', (event: Event) => {
     } else {
       document.querySelector('.inf').setAttribute('hidden', '');
     }
-    /* if(selectedTarget.damageValue > 6) {
-      document.querySelector('.side').removeAttribute('hidden');
-    } else {
-      document.querySelector('.side').setAttribute('hidden', '');
-    } */
   
   // display in panel:
   populateModifiersPanel(selectedWeapons);
@@ -456,12 +446,13 @@ function removeWeapon(element: HTMLInputElement) {
 }
 
 // Store shooting modifiers:
-// - Range:
+// - Range, missing loader, arc:
 document
   .querySelector('.modifiers .weapons')
   .addEventListener('change', (event: Event) => {
     const targetEl = (<HTMLInputElement>event.target); // the weapon being interacted with
     const value: string = targetEl.value;
+    console.log(targetEl.value.slice(1))
 
     value === 's' || value === 'l' || value === 'c' ? 
       // update range modifier:
@@ -469,9 +460,9 @@ document
     value === 'nl' ?
       // update missing loader modifier:
       selectedWeapons[parseInt(targetEl.name)].modifiers.hit.loader = targetEl.checked :
-    value === '' ?
+    value === 'af' || value === 'as' || value === 'ar'?
       // update targeted Armoured vehicle arc:
-      selectedWeapons[parseInt(targetEl.name)].modifiers.hit.loader = targetEl.checked :
+      selectedWeapons[parseInt(targetEl.name)].modifiers.damage.arc = targetEl.value.slice(1) as 'f'|'s'|'r':
     void 0;
 
     populateModifiersPanel(selectedWeapons);
