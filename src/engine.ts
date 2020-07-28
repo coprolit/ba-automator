@@ -311,7 +311,7 @@ function populateModifiersPanel(weapons: WeaponShooting[]) {
   document.querySelector('.modifiers .weapons').innerHTML = `
     ${weapons.map((weapon, index) => {
       return `<div class="weapon" data-index="${index}">
-        ${weapon.name} :
+        <div>${weapon.name}</div>
         
         <form>
           <label class="small">Range</label>
@@ -342,14 +342,16 @@ function populateModifiersPanel(weapons: WeaponShooting[]) {
 
         <div class="space"></div>
 
+        <input type="button" value="x" onclick="removeWeapon(this)">
+        
+      </div>
+      <div>
         ${canHarmTarget(toDamageModifier(weapon, selectedTarget), selectedTarget.damageValue) ?
           weaponProbabilitiesElement(weapon, selectedTarget) :
           '<span class="failure small">cannot damage</span>'
         }
-
-        <input type="button" value="x" onclick="removeWeapon(this)">
-        
-      </div>`
+      </div>
+      <hr>`
       }).join('')}
   `;
 

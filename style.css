@@ -32,6 +32,7 @@ fieldset > * {
 
 select, input {
   font: inherit;
+  font-size: 1.5vmax;
 }
 
 hr {
@@ -116,10 +117,10 @@ input[type=radio]:checked + label{
   display: flex;
   flex-direction: row;
   align-items: center;
+  margin-block-end: 6px;
 }
-.weapon > * {
-  margin-left: 4px;
-  margin-right: 4px;
+.weapon > *:not(:last-child) {
+  margin-right: 10px;
 }
 .weapon .space {
   flex-grow: 1;
