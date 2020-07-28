@@ -444,7 +444,7 @@ function crits(weaponsResult) {
 function attack() {
     var results = shoot(selectedWeapons, selectedTarget);
     attackHistory.push(results);
-    displayShootingResult(results, this.target);
+    displayShootingResult(results, selectedTarget);
     updateStats(attackHistory);
 }
 function displayShootingResult(weapons, target) {

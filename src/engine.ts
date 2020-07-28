@@ -683,7 +683,7 @@ function attack() {
   
   attackHistory.push(results);
   
-  displayShootingResult(results, this.target);
+  displayShootingResult(results, selectedTarget);
   updateStats(attackHistory);
 }
 
