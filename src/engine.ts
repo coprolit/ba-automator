@@ -40,37 +40,37 @@ const weapons: Weapon[] = [
     pen: 0,
     assault: false
   }, {
-    name: "HMG",
+    name: "HMG [pen 1]",
     range: 36,
     shots: 3,
     pen: 1,
     assault: false
   }, {
-    name: "Anti-tank Rifle",
+    name: "Anti-tank Rifle [pen 2]",
     range: 36,
     shots: 1,
     pen: 2,
     assault: false
   }, {
-    name: "Panzerfaust",
+    name: "Panzerfaust [pen 6]",
     range: 12,
     shots: 1,
     pen: 6,
     assault: false
   }, {
-    name: "Light AT gun",
+    name: "Light AT gun [pen 4]",
     range: 48,
     shots: 1,
     pen: 4,
     assault: false
   }, {
-    name: "Medium AT gun",
+    name: "Medium AT gun [pen 5]",
     range: 60,
     shots: 1,
     pen: 5,
     assault: false
   }, {
-    name: "Heavy AT gun",
+    name: "Heavy AT gun [pen 6]",
     range: 72,
     shots: 1,
     pen: 6,
@@ -86,39 +86,39 @@ const weapons: Weapon[] = [
 
 const targets: {name: string, value: number}[] = [
   {
-    name: 'Inexperienced infantry',
+    name: 'DV 3 / Inexperienced infantry',
     value: 3
   },
   {
-    name: 'Regular infantry',
+    name: 'DV 4 / Regular infantry',
     value: 4
   },
   {
-    name: 'Veteran infantry',
+    name: 'DV 5 / Veteran infantry',
     value: 5
   },
   {
-    name: 'Soft-skinned vehicle',
+    name: 'DV 6 / Soft-skinned vehicle',
     value: 6
   },
   {
-    name: 'Armoured car/carrier',
+    name: 'DV 7 / Armoured car/carrier',
     value: 7
   },
   {
-    name: 'Light tank',
+    name: 'DV 8 / Light tank',
     value: 8
   },
   {
-    name: 'Medium tank',
+    name: 'DV 9 / Medium tank',
     value: 9
   },
   {
-    name: 'Heavy tank',
+    name: 'DV 10 / Heavy tank',
     value: 10
   },
   {
-    name: 'Super-heavy tank',
+    name: 'DV 11 / Super-heavy tank',
     value: 11
   },
 ]
@@ -161,13 +161,19 @@ function toMissProbability(toHitProb: number) {
 }
 
 function toDamageProbability(modifier: number, damageValue: number) {
-  const factor = 3 + -1 * (damageValue - 4) + modifier;
+  if (canHarmTarget(modifier, damageValue)) {
+    const factor = (6 + 1 + modifier) - damageValue;
   
-  // negative factor == cannot harm / no chance
-  // a roll of 1 always fails
-  const probability = factor < 1 ? 0 : (factor > 5 ? 5 : factor) / 6;
+    // a roll of 1 always fails
+    const probability = (factor > 5 ? 5 : factor) / 6;
 
-  return probability;
+    return probability;
+  }
+}
+
+function toMassiveDamageProbability(modifier: number, damageValue: number) {
+  const factor = (6 + 1 + modifier) - damageValue;
+  return (factor - 3) / 6;
 }
 
 function hitsProbability(shots: number, toHitProb: number) {
@@ -191,7 +197,7 @@ function missProbability(weapon: WeaponShooting, target: Target) {
 
 function getProbabilities(weapons: WeaponShooting[], target: Target) {
   // shooting weapons' accumulated probability of missing:
-  // (chance to pin = 100% - chance to miss)  
+  // (chance to pin = 100% - chance to miss)
   const missProb = weapons.reduce((acc, weapon) => {
     const toDamageMod = toDamageModifier(weapon, target);
 
@@ -268,7 +274,7 @@ function toDamageModifier(weapon: WeaponShooting, target: Target) {
 
   return (target.building ? -1 : 0) // except for flamethrowers and HE
     + (target.shield ? -1 : 0)
-    // long range for Heavy Weapon Against Armoured Targets:
+    // long range for Heavy Weapon Against Armoured Targets (but not HE):
     + (weapon.modifiers.hit.range === 'l' && target.damageValue > 6 && weapon.pen > 0 ? -1 : 0)
     // shooting arc against Armoured Targets:
     + (weapon.pen > 0 ? arcLookup[weapon.modifiers.damage.arc] : 0)
@@ -363,7 +369,9 @@ function populateModifiersPanel(weapons: WeaponShooting[]) {
 
 function weaponProbabilitiesElement(weapon: WeaponShooting, target: Target) {
   const toHitProb = toHitProbability(toHitModifier(weapon, moved, pins, target));
-  const toDamageProb = toDamageProbability(toDamageModifier(weapon, target), target.damageValue);
+  const toDamageMod = toDamageModifier(weapon, target);
+  const toDamageProb = toDamageProbability(toDamageMod, target.damageValue);
+  const toMassiveDamageProb = toMassiveDamageProbability(toDamageMod, target.damageValue)
   const hitsProb = hitsProbability(weapon.shots, toHitProb);
   const killsProb = killsProbability(weapon.shots, toHitProb, toDamageProb);
   const toPinProb = (1 - missProbability(weapon, target));
@@ -383,6 +391,7 @@ function weaponProbabilitiesElement(weapon: WeaponShooting, target: Target) {
     <span class="highlight">Hits ${hitsProb.toFixed(2)}</span>
     &rarr;
     <span class="highlight">${target.damageValue > 5 ? 'Penetrations' : 'Casualties'} ${killsProb.toFixed(2)}</span>
+    ${toMassiveDamageProb > 0 ? `<span class="highlight red">Massive damage ${(toMassiveDamageProb * 100).toFixed(1)}%</span>` : ''}
   </span>`;
 }
 
@@ -454,7 +463,6 @@ document
   .addEventListener('change', (event: Event) => {
     const targetEl = (<HTMLInputElement>event.target); // the weapon being interacted with
     const value: string = targetEl.value;
-    console.log(targetEl.value.slice(1))
 
     value === 's' || value === 'l' || value === 'c' ? 
       // update range modifier:

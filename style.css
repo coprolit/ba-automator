@@ -112,6 +112,9 @@ input[type=radio]:checked + label{
 .highlight.light {
   background-color: wheat;
 }
+.highlight.red {
+  background-color: rosybrown;
+}
 
 .weapon {
   display: flex;
