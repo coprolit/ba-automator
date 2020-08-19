@@ -73,15 +73,17 @@
           <label for="inexperienced">Inexperienced</label>
         </div>
 
-        <form id="addWeapon" class="panel dark">
-          <label>Add weapons to shoot</label>
-          <select name="type"></select>
-          <input name="amount" type="number" min="1" max="20" value="1">
-          <input type="submit" value="Add">
-        </form>
-
-        <div class="weapons"></div>
-
+        <div class="table">
+          <form id="addWeapon">
+            <label>Add weapons to shoot</label>
+            <select name="type"></select>
+            <input name="amount" type="number" min="1" max="20" value="1">
+            <input type="submit" value="Add">
+          </form>
+          
+          <div class="weapons"></div>
+        </div>
+        
         <div class="probabilities">
           <span class="title">Total</span>
           <span class="highlight light">To Pin <span class="pinning">0%</span></span>  

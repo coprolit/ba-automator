@@ -1,6 +1,11 @@
 :root {
   --border: 1px solid rgba(0,0,0,.2);
   --background-color: whitesmoke;
+  --space: 1.5vw;
+}
+
+html {
+  font-size: 16px;
 }
 
 body {
@@ -8,31 +13,31 @@ body {
   font-family: "Roboto";
   font-weight: 400;
   font-style: normal;
-  font-size: 2vmax;
 }
 
 header {
   border-bottom: var(--border);
-  padding: 10px;
+  padding: var(--space);
   background-color: var(--background-color);
 }
 
 h3, h4 {
-  margin-block-start: 10px;
-  margin-block-end: 10px;
+  margin-block-start: var(--space);
+  margin-block-end: var(--space);
 }
 
 fieldset {
-  margin-block-end: 10px;
+  margin-block-end: var(--space);
   border: var(--border);
+  padding: var(--space);
 }
-fieldset > * {
-  margin-block-start: 10px;
+fieldset > div:not(:first-of-type),
+fieldset > form:not(:first-of-type) {
+  margin-block-start: var(--space);
 }
 
 select, input {
   font: inherit;
-  font-size: 1.5vmax;
 }
 
 hr {
@@ -40,10 +45,10 @@ hr {
 }
 
 .small {
-  font-size: 1.5vmax;
+  font-size: .8rem;
 }
 .tiny {
-  font-size: 1vmax;
+  font-size: .5rem;
 }
 
 .title {
@@ -68,7 +73,6 @@ hr {
   display: inline-flex;
   border-radius: 8px;
   overflow: hidden;
-  font-size: 1.5vmax;
 }
 
 input[type=radio] {
@@ -95,12 +99,11 @@ input[type=radio]:checked + label{
 }
 
 .panel {
-  padding: 10px;
-  margin-block-end: 10px;
+  padding: var(--space);
+  margin-block-end: var(--space);
 }
 .panel.dark {
   background-color: var(--background-color);
-  /* border: var(--border); */
 }
 
 .highlight {
@@ -116,6 +119,23 @@ input[type=radio]:checked + label{
   background-color: rosybrown;
 }
 
+.table {
+  border-top: var(--border);
+  border-bottom: var(--border);
+  margin-left: calc(-1 * var(--space));
+  margin-right: calc(-1 * var(--space));
+}
+
+.table > form {
+  background-color: var(--background-color);
+  padding: var(--space);
+}
+
+.weapons > * {
+  padding: calc(var(--space)/2) var(--space);
+  border-top: var(--border);
+}
+
 .weapon {
   display: flex;
   flex-direction: row;
@@ -123,10 +143,14 @@ input[type=radio]:checked + label{
   margin-block-end: 6px;
 }
 .weapon > *:not(:last-child) {
-  margin-right: 10px;
+  margin-right: var(--space);
 }
 .weapon .space {
   flex-grow: 1;
+}
+
+.probabilities {
+  font-size: large;
 }
 
 .roll {

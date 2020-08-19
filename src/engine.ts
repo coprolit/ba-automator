@@ -316,7 +316,9 @@ function populateModifiersPanel(weapons: WeaponShooting[]) {
   // display selected weapons for modifier adjustments:
   document.querySelector('.modifiers .weapons').innerHTML = `
     ${weapons.map((weapon, index) => {
-      return `<div class="weapon" data-index="${index}">
+      return `
+      <div>
+      <div class="weapon" data-index="${index}">
         <div>${weapon.name}</div>
         
         <form>
@@ -349,7 +351,6 @@ function populateModifiersPanel(weapons: WeaponShooting[]) {
         <div class="space"></div>
 
         <input type="button" value="x" onclick="removeWeapon(this)">
-        
       </div>
       <div>
         ${canHarmTarget(toDamageModifier(weapon, selectedTarget), selectedTarget.damageValue) ?
@@ -357,7 +358,7 @@ function populateModifiersPanel(weapons: WeaponShooting[]) {
           '<span class="failure small">cannot damage</span>'
         }
       </div>
-      <hr>`
+      </div>`
       }).join('')}
   `;
 
