@@ -172,6 +172,11 @@ function toDamageProbability(modifier: number, damageValue: number) {
 }
 
 function toMassiveDamageProbability(modifier: number, damageValue: number) {
+  // ignore if soft target
+  if (damageValue < 7) {
+    return null;
+  }
+  
   const factor = (6 + 1 + modifier) - damageValue;
   return (factor - 3) / 6;
 }

@@ -160,6 +160,9 @@ function toDamageProbability(modifier, damageValue) {
     }
 }
 function toMassiveDamageProbability(modifier, damageValue) {
+    if (damageValue < 7) {
+        return null;
+    }
     var factor = (6 + 1 + modifier) - damageValue;
     return (factor - 3) / 6;
 }
