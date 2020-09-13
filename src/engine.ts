@@ -277,7 +277,7 @@ function toDamageModifier(weapon: WeaponShooting, target: Target) {
     r: +2, // rear
   }
 
-  return (target.building ? -1 : 0) // except for flamethrowers and HE
+  return (target.building ? -1 : 0) // TODO except for flamethrowers and HE
     + (target.shield ? -1 : 0)
     // long range for Heavy Weapon Against Armoured Targets (but not HE):
     + (weapon.modifiers.hit.range === 'l' && target.damageValue > 6 && weapon.pen > 0 ? -1 : 0)
